@@ -10,7 +10,7 @@ let score = 0;
 let gameRunning = false;
 let obstacles = [];
 let frame = 0;
-let speed = 5;
+let speed = 5.5;
 
 window.addEventListener('keydown', e => {
     if ((e.key === ' ' || e.key === 'Spacebar') && gameRunning) jump();
@@ -21,29 +21,17 @@ canvas.addEventListener('click', () => {
 });
 
 function spawnObstacle() {
-    const type = Math.random(); // Random obstacle type
+    // Spawn farther to the right so you can clearly see them coming
+    const height = 80 + Math.random() * 90;   // Tall obstacles mostly
+    const gap = 180 + Math.random() * 80;     // Distance from right edge
 
-    if (type < 0.6) {
-        // Tall obstacle (must jump over)
-        obstacles.push({
-            x: canvas.width,
-            y: 260,
-            width: 45,
-            height: 100,
-            color: '#ff0044',
-            type: 'tall'
-        });
-    } else {
-        // Short obstacle (can jump over or duck - but we only have jump for now)
-        obstacles.push({
-            x: canvas.width,
-            y: 310,
-            width: 45,
-            height: 50,
-            color: '#ff8800',
-            type: 'short'
-        });
-    }
+    obstacles.push({
+        x: canvas.width + gap,        // Spawn with extra space in front
+        y: canvas.height - height,
+        width: 48,
+        height: height,
+        color: '#ff0044'
+    });
 }
 
 function updateObstacles() {
@@ -51,7 +39,7 @@ function updateObstacles() {
         const obs = obstacles[i];
         obs.x -= speed;
 
-        // Collision
+        // Collision detection
         if (
             player.x + player.size > obs.x &&
             player.x < obs.x + obs.width &&
@@ -61,10 +49,10 @@ function updateObstacles() {
             return;
         }
 
-        // Remove when off screen + add score
+        // Remove off-screen + give points
         if (obs.x + obs.width < 0) {
             obstacles.splice(i, 1);
-            score += 10;
+            score += 20;
             scoreEl.textContent = score;
         }
     }
@@ -77,9 +65,13 @@ function update() {
     updateObstacles();
 
     frame++;
-    if (frame % 65 === 0) {           // Spawn rate
+
+    // Spawn obstacles with better timing
+    if (frame % 55 === 0) {           // Changed for better spacing
         spawnObstacle();
-        if (speed < 10) speed += 0.08; // Gradually get faster
+        
+        // Slowly increase difficulty
+        if (speed < 11) speed += 0.07;
     }
 }
 
@@ -90,18 +82,19 @@ function draw() {
 
     drawPlayer();
 
-    // Draw obstacles
+    // Draw obstacles with strong glow
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = '#ff0044';
+    ctx.fillStyle = '#ff0044';
+    
     for (let obs of obstacles) {
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = obs.color;
-        ctx.fillStyle = obs.color;
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-        ctx.shadowBlur = 0;
     }
+    ctx.shadowBlur = 0;
 
-    // Ground
+    // Ground line
     ctx.fillStyle = '#00ffcc';
-    ctx.fillRect(0, 360, canvas.width, 8);
+    ctx.fillRect(0, 360, canvas.width, 10);
 }
 
 function gameLoop() {
@@ -110,7 +103,6 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Game control functions
 function startGame() {
     startScreen.style.display = 'none';
     resetGame();
@@ -131,7 +123,7 @@ function resetGame() {
     player.grounded = true;
     obstacles = [];
     frame = 0;
-    speed = 5;
+    speed = 5.5;
 }
 
 function restartGame() {
@@ -139,6 +131,6 @@ function restartGame() {
     gameRunning = true;
 }
 
-// Start the game
+// Initialize
 startScreen.style.display = 'block';
 gameLoop();
