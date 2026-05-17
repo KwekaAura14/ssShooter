@@ -1,4 +1,4 @@
-// main.js
+// main.js - Geometry Dash Style
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
@@ -10,7 +10,7 @@ let score = 0;
 let gameRunning = false;
 let obstacles = [];
 let frame = 0;
-let speed = 5.5;
+let speed = 6.5;           // Constant running speed
 
 window.addEventListener('keydown', e => {
     if ((e.key === ' ' || e.key === 'Spacebar') && gameRunning) jump();
@@ -21,15 +21,11 @@ canvas.addEventListener('click', () => {
 });
 
 function spawnObstacle() {
-    // Spawn farther to the right so you can clearly see them coming
-    const height = 80 + Math.random() * 90;   // Tall obstacles mostly
-    const gap = 180 + Math.random() * 80;     // Distance from right edge
-
     obstacles.push({
-        x: canvas.width + gap,        // Spawn with extra space in front
-        y: canvas.height - height,
-        width: 48,
-        height: height,
+        x: canvas.width + 50,
+        y: 310,                    // On the ground like you
+        width: 35,
+        height: 60,                // Spike / block style
         color: '#ff0044'
     });
 }
@@ -39,20 +35,20 @@ function updateObstacles() {
         const obs = obstacles[i];
         obs.x -= speed;
 
-        // Collision detection
+        // Collision
         if (
-            player.x + player.size > obs.x &&
-            player.x < obs.x + obs.width &&
-            player.y + player.size > obs.y
+            player.x + player.size > obs.x + 5 &&
+            player.x < obs.x + obs.width - 5 &&
+            player.y + player.size > obs.y + 5
         ) {
             endGame();
             return;
         }
 
-        // Remove off-screen + give points
+        // Remove off screen + score
         if (obs.x + obs.width < 0) {
             obstacles.splice(i, 1);
-            score += 20;
+            score += 10;
             scoreEl.textContent = score;
         }
     }
@@ -66,35 +62,52 @@ function update() {
 
     frame++;
 
-    // Spawn obstacles with better timing
-    if (frame % 55 === 0) {           // Changed for better spacing
+    // Spawn obstacles (Geometry Dash style spacing)
+    if (frame % 48 === 0) {
         spawnObstacle();
         
-        // Slowly increase difficulty
-        if (speed < 11) speed += 0.07;
+        // Increase difficulty over time
+        if (speed < 12) speed += 0.03;
+    }
+}
+
+function drawBackground() {
+    ctx.fillStyle = '#0a0a1f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Moving grid lines (GD feel)
+    ctx.strokeStyle = 'rgba(0, 255, 204, 0.15)';
+    ctx.lineWidth = 2;
+    const offset = (frame * 3) % 60;
+    for (let x = offset; x < canvas.width; x += 60) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
     }
 }
 
 function draw() {
-    // Background
-    ctx.fillStyle = '#0a0a1f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    drawBackground();
     drawPlayer();
 
-    // Draw obstacles with strong glow
-    ctx.shadowBlur = 30;
+    // Draw obstacles (spike style)
+    ctx.shadowBlur = 20;
     ctx.shadowColor = '#ff0044';
     ctx.fillStyle = '#ff0044';
     
     for (let obs of obstacles) {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        
+        // Simple spike look
+        ctx.fillStyle = '#ff3366';
+        ctx.fillRect(obs.x + 8, obs.y - 15, obs.width - 16, 20);
     }
     ctx.shadowBlur = 0;
 
-    // Ground line
+    // Ground
     ctx.fillStyle = '#00ffcc';
-    ctx.fillRect(0, 360, canvas.width, 10);
+    ctx.fillRect(0, 370, canvas.width, 12);
 }
 
 function gameLoop() {
@@ -123,7 +136,7 @@ function resetGame() {
     player.grounded = true;
     obstacles = [];
     frame = 0;
-    speed = 5.5;
+    speed = 6.5;
 }
 
 function restartGame() {
@@ -131,6 +144,6 @@ function restartGame() {
     gameRunning = true;
 }
 
-// Initialize
+// Start everything
 startScreen.style.display = 'block';
 gameLoop();
