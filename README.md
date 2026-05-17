@@ -1,2 +1,0 @@
-# ssShooter
-my new game
