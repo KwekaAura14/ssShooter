@@ -1,324 +1,758 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>NEXUS CHRONICLES - ENHANCED EDITION</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none}
-body{background:#000;overflow:hidden;font-family:'Courier New',monospace;cursor:none}
-canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
-#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
-.bar-wrap{position:absolute}
-#hud-tl{position:absolute;left:18px;bottom:28px}
-#hud-tr{position:absolute;right:18px;bottom:28px;text-align:right}
-.bar-lbl{font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.45);margin-bottom:3px}
-.bar-outer{width:200px;height:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);position:relative}
-.bar-fill{height:100%;transition:width .1s ease}
-#hp-fill{background:linear-gradient(90deg,#cc0000,#ff4444);box-shadow:0 0 6px #ff2020}
-#sta-fill{background:linear-gradient(90deg,#005500,#00cc44);box-shadow:0 0 4px #00ff44}
-#en-fill{background:linear-gradient(90deg,#002288,#4488ff);box-shadow:0 0 4px #2266ff}
-#hp-val{font-size:22px;font-weight:900;color:#fff;margin-top:2px;text-shadow:0 0 8px rgba(255,80,80,.7)}
-#ammo-cur{font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px}
-#ammo-res{font-size:16px;color:rgba(255,255,255,.4)}
-#wp-name{font-size:8px;letter-spacing:3px;color:rgba(255,160,0,.9);margin-bottom:4px}
-#hud-tc{position:absolute;top:18px;left:50%;transform:translateX(-50%);text-align:center}
-#zone-name{font-size:9px;letter-spacing:4px;color:rgba(80,180,255,.8)}
-#score-disp{font-size:18px;font-weight:900;color:#fff;letter-spacing:1px}
-#level-disp{font-size:9px;letter-spacing:3px;color:rgba(255,200,0,.8)}
-#xp-bar-outer{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08)}
-#xp-bar-fill{height:100%;background:linear-gradient(90deg,#0088ff,#00ffcc);transition:width .3s}
-#form-disp{position:absolute;top:28px;right:18px;text-align:right}
-#form-name{font-size:9px;letter-spacing:3px;font-weight:bold}
-#form-tier{font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-top:2px}
-#ability-bar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
-.ab-slot{width:44px;height:44px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.6);position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column}
-.ab-slot.ready{border-color:rgba(255,200,0,.6);box-shadow:0 0 8px rgba(255,200,0,.3)}
-.ab-key{font-size:7px;color:rgba(255,255,255,.5);position:absolute;top:3px;left:4px}
-.ab-name{font-size:5px;letter-spacing:1px;color:rgba(255,255,255,.7);text-align:center;line-height:1.3}
-.ab-cd{position:absolute;bottom:3px;right:4px;font-size:7px;color:#ff4444}
-.ab-fill{position:absolute;bottom:0;left:0;right:0;background:rgba(0,150,255,.3);transition:height .1s}
-#notif-stack{position:absolute;top:60px;right:18px;display:flex;flex-direction:column;gap:4px;width:220px;z-index:20}
-.notif{font-size:9px;letter-spacing:1.5px;padding:4px 10px;border-left:2px solid;background:rgba(0,0,0,.8);animation:notifIn .3s ease}
-@keyframes notifIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
-#xhair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:15}
-.xh{position:absolute;background:rgba(255,255,255,.9);transition:background 0.05s}
-#xh-t{width:2px;height:9px;top:-16px;left:-1px}
-#xh-b{width:2px;height:9px;top:7px;left:-1px}
-#xh-l{width:9px;height:2px;left:-16px;top:-1px}
-#xh-r{width:9px;height:2px;left:7px;top:-1px}
-#xh-d{width:4px;height:4px;border-radius:50%;top:-2px;left:-2px;background:rgba(255,200,100,.8)}
-#interact{position:absolute;bottom:37%;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:3px;color:rgba(255,200,0,.9);display:none;background:rgba(0,0,0,.7);padding:6px 16px;border-radius:2px;z-index:15}
-#boss-bar-wrap{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:440px;display:none;z-index:15}
-#boss-name{font-size:10px;letter-spacing:4px;text-align:center;margin-bottom:4px;font-weight:bold}
-#boss-hp-outer{width:100%;height:14px;background:rgba(30,0,0,.8);border:1px solid rgba(255,50,50,.4)}
-#boss-hp-fill{height:100%;background:linear-gradient(90deg,#cc0000,#ff4400);transition:width .2s;box-shadow:0 0 8px #ff2200}
-#boss-phase{font-size:8px;letter-spacing:2px;text-align:center;margin-top:3px;color:rgba(255,150,0,.8)}
-#fps-c{position:absolute;top:8px;left:18px;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.25);z-index:15}
-#env-disp{position:absolute;top:22px;left:18px;font-size:8px;letter-spacing:2px;color:rgba(200,200,150,.5);z-index:15}
-#mm{position:fixed;right:18px;bottom:28px;width:130px;height:130px;border:1px solid rgba(255,80,80,.25);z-index:11;background:#000;}
-#lvlup{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:25}
-#lvlup h2{font-size:32px;font-weight:900;color:#ffcc00;text-shadow:0 0 20px #ffcc00;letter-spacing:4px}
-.screen{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.96);backdrop-filter:blur(4px);}
-.screen.hidden{display:none}
-#main-menu{background:radial-gradient(ellipse at 50% 55%,#0a0018 0%,#000 80%)}
-.game-title{font-size:clamp(42px,8vw,88px);font-weight:900;letter-spacing:.2em;color:#fff;text-transform:uppercase;text-shadow:0 0 40px #8800ff,0 0 80px rgba(136,0,255,.4);line-height:.9}
-.game-sub{font-size:clamp(9px,1.5vw,14px);letter-spacing:.5em;color:#8833cc;text-transform:uppercase;margin:8px 0 50px}
-.menu-btn{padding:13px 48px;margin:6px;font-size:11px;letter-spacing:.35em;text-transform:uppercase;font-family:'Courier New',monospace;cursor:pointer;background:transparent;border:1px solid rgba(136,0,255,.5);color:#ccc;transition:all .2s;pointer-events:all}
-.menu-btn:hover{border-color:#aa44ff;color:#fff;box-shadow:0 0 20px rgba(136,0,255,.3);text-shadow:0 0 10px #aa44ff}
-#death-screen .game-title{color:#cc0000;text-shadow:0 0 40px #ff000066}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 40px;margin:20px 0 32px;min-width:320px}
-.stat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07)}
-.stat-lbl{color:#777;font-size:10px;letter-spacing:.2em}
-.stat-val{color:#fff;font-size:12px;font-weight:bold}
-#dialogue{position:fixed;bottom:0;left:0;right:0;z-index:50;padding:20px 40px;background:rgba(0,0,16,.94);border-top:1px solid rgba(100,80,180,.4);display:none}
-#combo-disp{position:absolute;top:50%;right:28px;transform:translateY(-50%);text-align:right;pointer-events:none;z-index:15}
-#combo-val{font-size:28px;font-weight:900;color:#ffcc00;text-shadow:0 0 12px #ffcc00;opacity:0;transition:opacity .1s}
-/* speed trail effect container */
-#trail-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NEXUS CHRONICLES - WebGL Action RPG</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        #ui {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 20;
+            font-family: 'Courier New', monospace;
+        }
+        /* HUD Styles */
+        .hud-panel {
+            position: absolute;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+            border-left: 3px solid #ff3366;
+            padding: 8px 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        .hud-right {
+            right: 20px;
+            top: 20px;
+            text-align: right;
+            border-left: none;
+            border-right: 3px solid #ff3366;
+            border-radius: 8px 0 0 8px;
+        }
+        .bar-container {
+            width: 240px;
+            height: 8px;
+            background: rgba(0,0,0,0.5);
+            margin: 5px 0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            transition: width 0.1s linear;
+        }
+        #hp-fill { background: linear-gradient(90deg, #ff3366, #ff6680); box-shadow: 0 0 8px #ff3366; }
+        #energy-fill { background: linear-gradient(90deg, #33ccff, #66ffcc); box-shadow: 0 0 8px #33ccff; }
+        #xp-fill { background: linear-gradient(90deg, #aa66ff, #ff66cc); }
+        .stat-text {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #ddd;
+            margin-bottom: 4px;
+        }
+        .value-large {
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,100,100,0.8) 0%, rgba(255,255,255,0) 70%);
+            border: 1px solid rgba(255,100,100,0.9);
+            pointer-events: none;
+        }
+        .ability-slot {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 16px;
+            border-radius: 40px;
+            backdrop-filter: blur(8px);
+        }
+        .ability {
+            width: 50px;
+            height: 50px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            background: rgba(20,20,40,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            transition: all 0.1s;
+        }
+        .ability.ready { border-color: #ffaa44; box-shadow: 0 0 15px rgba(255,170,0,0.5); }
+        .notif {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 16px;
+            border-left: 4px solid #ffaa44;
+            font-size: 11px;
+            animation: slideIn 0.3s ease;
+            pointer-events: none;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: 0.3s;
+        }
+        .screen.hidden { display: none; }
+        .game-title {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 12px;
+            background: linear-gradient(135deg, #ff3366, #33ccff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 40px rgba(255,51,102,0.3);
+        }
+        .menu-btn {
+            margin: 12px;
+            padding: 12px 32px;
+            background: transparent;
+            border: 1px solid #ff3366;
+            color: #fff;
+            font-family: monospace;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .menu-btn:hover {
+            background: #ff3366;
+            box-shadow: 0 0 20px #ff3366;
+            transform: scale(1.05);
+        }
+        #combat-text {
+            position: absolute;
+            top: 40%;
+            right: 10%;
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffaa44;
+            text-shadow: 0 0 20px #ff6600;
+            opacity: 0;
+            transition: opacity 0.1s;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<canvas id="mm" width="130" height="130"></canvas>
-<div id="ui">
-  <div id="xp-bar-outer"><div id="xp-bar-fill" style="width:0%"></div></div>
-  <div id="fps-c">60 FPS</div><div id="env-disp">DAY · CLEAR</div>
-  <div id="hud-tc"><div id="zone-name">IRONHAVEN CITY</div><div id="score-disp">0</div><div id="level-disp">LEVEL 1</div></div>
-  <div id="form-disp"><div id="form-name" style="color:#88aaff">BASE FORM</div><div id="form-tier">TIER 0</div></div>
-  <div id="hud-tl">
-    <div class="bar-lbl">// HEALTH</div><div class="bar-outer"><div class="bar-fill" id="hp-fill" style="width:100%"></div></div><div id="hp-val">100</div>
-    <div class="bar-lbl" style="margin-top:8px">// STAMINA</div><div class="bar-outer"><div class="bar-fill" id="sta-fill" style="width:100%"></div></div>
-    <div class="bar-lbl" style="margin-top:6px">// ENERGY</div><div class="bar-outer"><div class="bar-fill" id="en-fill" style="width:100%"></div></div>
-  </div>
-  <div id="hud-tr"><div id="wp-name">PLASMA PISTOL</div><div id="ammo-cur">30</div><div id="ammo-res">/ 999</div></div>
-  <div id="ability-bar">
-    <div class="ab-slot" id="ab0"><div class="ab-key">1</div><div class="ab-fill" id="ab-fill0" style="height:0%"></div><div class="ab-name">ENERGY<br>BLAST</div><div class="ab-cd" id="ab-cd0"></div></div>
-    <div class="ab-slot" id="ab1"><div class="ab-key">2</div><div class="ab-fill" id="ab-fill1" style="height:0%"></div><div class="ab-name">SHOCK<br>WAVE</div><div class="ab-cd" id="ab-cd1"></div></div>
-    <div class="ab-slot" id="ab2"><div class="ab-key">3</div><div class="ab-fill" id="ab-fill2" style="height:0%"></div><div class="ab-name">TELE<br>PORT</div><div class="ab-cd" id="ab-cd2"></div></div>
-    <div class="ab-slot" id="ab3"><div class="ab-key">4</div><div class="ab-fill" id="ab-fill3" style="height:0%"></div><div class="ab-name">METEOR</div><div class="ab-cd" id="ab-cd3"></div></div>
-    <div class="ab-slot" id="ab4"><div class="ab-key">5</div><div class="ab-fill" id="ab-fill4" style="height:0%"></div><div class="ab-name">NEXUS<br>BEAM</div><div class="ab-cd" id="ab-cd4"></div></div>
-  </div>
-  <div id="xhair"><div class="xh" id="xh-t"></div><div class="xh" id="xh-b"></div><div class="xh" id="xh-l"></div><div class="xh" id="xh-r"></div><div class="xh" id="xh-d"></div></div>
-  <div id="interact"></div>
-  <div id="boss-bar-wrap"><div id="boss-name"></div><div id="boss-hp-outer"><div id="boss-hp-fill" style="width:100%"></div></div><div id="boss-phase"></div></div>
-  <div id="notif-stack"></div>
-  <div id="lvlup"><h2 id="lvlup-txt">LEVEL UP!</h2></div>
-  <div id="combo-disp"><div id="combo-val"></div><div id="combo-txt">COMBO</div></div>
-</div>
-<div id="dialogue"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-next">[E] NEXT  [ESC] CLOSE</div></div>
-<div class="screen" id="main-menu">
-  <div class="game-title">NEXUS</div><div class="game-title" style="font-size:clamp(18px,3.5vw,40px);letter-spacing:.5em;margin-top:-8px">CHRONICLES</div>
-  <div class="game-sub">Open World RPG · Transformation · Speed</div>
-  <button class="menu-btn" onclick="startGame()">▶ BEGIN JOURNEY</button>
-  <button class="menu-btn" onclick="document.getElementById('ctrl-info').style.display=document.getElementById('ctrl-info').style.display==='none'?'block':'none'">⚙ CONTROLS</button>
-  <div id="ctrl-info" style="display:none;color:#aaa;">WASD MOVE · SPACE SHOOT · SHIFT SPRINT · Q TRANSFORM · Z ULTIMATE · 1-5 ABILITIES · E INTERACT · R RELOAD · TAB INV · M MAP · ESC PAUSE</div>
-</div>
-<div class="screen hidden" id="pause-menu"><div class="game-title" style="font-size:36px">PAUSED</div><button class="menu-btn" onclick="resumeGame()">▶ RESUME</button><button class="menu-btn" onclick="quitToMenu()">↩ MAIN MENU</button></div>
-<div class="screen hidden" id="death-screen"><div class="game-title" style="font-size:clamp(24px,5vw,56px);color:#cc0000">YOU FELL</div><div class="game-sub">THE DARKNESS CLAIMS ANOTHER</div><div id="hs-badge" style="display:none;color:#ffcc00">★ NEW HIGH SCORE ★</div><div class="stat-grid" id="death-stats"></div><button class="menu-btn" onclick="startGame()">↺ TRY AGAIN</button><button class="menu-btn" onclick="quitToMenu()">↩ MAIN MENU</button></div>
-<div class="screen hidden" id="inv-screen"><h2>INVENTORY</h2><div id="inv-content" style="color:#fff;"></div><div style="margin-top:20px;font-size:10px;">[TAB] CLOSE</div></div>
-<div class="screen hidden" id="map-screen"><h2>WORLD MAP</h2><canvas id="wmap" width="576" height="576"></canvas><div class="ft-list" id="ft-list"></div><div style="margin-top:10px;font-size:8px;">[M] CLOSE</div></div>
+    <div id="ui">
+        <div class="hud-panel" style="top:20px; left:20px;">
+            <div class="stat-text">⚡ HEALTH</div>
+            <div class="bar-container"><div id="hp-fill" class="bar-fill" style="width:100%"></div></div>
+            <div class="stat-text" style="margin-top:8px">🌀 ENERGY</div>
+            <div class="bar-container"><div id="energy-fill" class="bar-fill" style="width:100%"></div></div>
+            <div class="value-large" id="hp-value" style="font-size:18px; margin-top:4px">100</div>
+        </div>
+        <div class="hud-panel hud-right" style="top:20px; right:20px;">
+            <div class="stat-text">🔫 WEAPON</div>
+            <div id="weapon-name" style="color:#ffaa44; font-weight:bold">PLASMA BLADE</div>
+            <div class="value-large" id="ammo-count" style="font-size:24px">∞</div>
+            <div class="stat-text" style="margin-top:8px">✨ LEVEL <span id="level-num">1</span></div>
+            <div class="bar-container" style="width:160px"><div id="xp-fill" class="bar-fill" style="width:0%"></div></div>
+        </div>
+        <div id="crosshair"></div>
+        <div class="ability-slot" id="ability-bar"></div>
+        <div id="notif-container" style="position:absolute; top:100px; right:20px;"></div>
+        <div id="combat-text">x2 COMBO</div>
+        <div id="boss-bar" style="position:absolute; top:80px; left:50%; transform:translateX(-50%); width:400px; display:none;">
+            <div class="stat-text" id="boss-name" style="text-align:center; color:#ff6666">BOSS</div>
+            <div class="bar-container"><div id="boss-hp" class="bar-fill" style="width:100%; background:#ff3366"></div></div>
+        </div>
+    </div>
 
-<script>
-// ======================== ENHANCED NEXUS CHRONICLES ========================
-// Features: Smooth velocity movement, screen shake, transformation auras, hit effects, combo, sprint, dash
+    <div class="screen" id="menu-screen">
+        <div class="game-title">NEXUS CHRONICLES</div>
+        <div style="margin:20px 0; letter-spacing:4px; color:#aaa">WEBGL • TRANSFORMATION • ACTION</div>
+        <button class="menu-btn" onclick="startGame()">▶ START GAME</button>
+        <button class="menu-btn" onclick="showControls()">⚙ CONTROLS</button>
+        <div id="controls-info" style="display:none; margin-top:20px; text-align:center; font-size:12px; color:#888">
+            WASD - Move | MOUSE - Look | LEFT CLICK - Attack | SHIFT - Sprint | Q - Transform | R - Ultimate | 1-4 - Abilities
+        </div>
+    </div>
+    <div class="screen hidden" id="death-screen">
+        <div class="game-title" style="font-size:48px; color:#ff3366">DEFEATED</div>
+        <button class="menu-btn" onclick="restartGame()">RESTART</button>
+        <button class="menu-btn" onclick="quitToMenu()">MENU</button>
+    </div>
 
-const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
-const SW = 960, SH = 540, HW = SW>>1, HH = SH>>1;
-cvs.width = SW; cvs.height = SH;
-cvs.style.width = '100vw'; cvs.style.height = '100vh';
-const mmCtx = document.getElementById('mm').getContext('2d');
-const wmCtx = document.getElementById('wmap').getContext('2d');
+    <!-- Import Three.js and add-ons -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
 
-// ----- GAME STATE -----
-let gameState = 'menu';
-let enemies = [], particles = [], loots = [], chests = [];
-let activeBoss = null, notifications = [], damageNums = [];
-let screenShake = 0, shakeX = 0, shakeY = 0;
-let trailPositions = [];
-
-// ----- PLAYER WITH PHYSICS -----
-let PL = {
-  x:10.5, y:10.5, angle:0, alive:true,
-  hp:100, maxHp:100, stamina:100, maxSta:100, energy:100, maxEn:100,
-  level:1, xp:0, xpNext:100, skillPts:0, skills:{ str:0, def:0, spd:0 },
-  formIdx:0, unlockedForms:new Set([0]), transformT:0,
-  weapons: [{ name:'PLASMA PISTOL', dmg:25, rpm:360, range:20, pellets:1, ammo:30, maxAmmo:30, reserve:999 }],
-  curWp:0, gold:0, kills:0, score:0,
-  abilityCds:[0,0,0,0,0], hitFlash:0, iFrames:0, combo:0, comboT:0,
-  shootCd:0, muzzleT:0,
-  // Movement with velocity
-  vx:0, vy:0, sprinting:false, dashCd:0,
-  questsDone:new Set(), bossKills:{}, zonesVisited:new Set()
-};
-
-const FORMS = [
-  { name:'BASE FORM', tier:0, lvlReq:1, dmgM:1.0, spdM:1.0, eDrain:0, aura:[0.55,0.75,1.0] },
-  { name:'RAGE FORM', tier:1, lvlReq:3, dmgM:1.8, spdM:1.35, eDrain:6, aura:[1.0,0.3,0.0] },
-  { name:'ENERGY FORM', tier:2, lvlReq:8, dmgM:2.5, spdM:1.9, eDrain:14, aura:[0.2,0.9,1.0] },
-  { name:'GOD FORM', tier:3, lvlReq:15, dmgM:4.5, spdM:2.5, eDrain:25, aura:[1.0,1.0,0.2] }
-];
-
-const ABILITIES = [
-  { name:'ENERGY BLAST', dmg:80, cd:3, cost:20, type:'shot', col:[0.2,0.8,1.0] },
-  { name:'SHOCKWAVE', dmg:60, cd:4, cost:25, type:'aoe', col:[1.0,0.8,0.2] },
-  { name:'TELEPORT', dmg:0, cd:2, cost:15, type:'teleport', col:[0.8,0.2,1.0] },
-  { name:'METEOR', dmg:200, cd:8, cost:50, type:'aoe', col:[1.0,0.4,0.0] },
-  { name:'NEXUS BEAM', dmg:350, cd:12, cost:70, type:'beam', col:[1.0,1.0,1.0] }
-];
-
-const ETYPES = {
-  bandit:{ hp:60, spd:1.8, dmg:12, xp:30, gold:5, col:[0.6,0.4,0.2], sz:0.5 },
-  mutant:{ hp:110, spd:2.5, dmg:18, xp:55, gold:8, col:[0.3,0.6,0.2], sz:0.5 },
-  robot:{ hp:180, spd:1.5, dmg:22, xp:85, gold:12, col:[0.4,0.4,0.6], sz:0.5 }
-};
-
-const BOSSES = { boss1:{ name:'TITAN KING', hp:4000, col:[0.9,0.4,0.1], sz:1.3, xp:2000, gold:500, phaseHp:[0.7,0.35] } };
-const ZONE_NAMES = { city:'IRONHAVEN', forest:'WHISPER WOODS' };
-const FAST_TRAVEL = [{ name:'IRONHAVEN', x:10.5, y:10.5 },{ name:'WHISPER WOODS', x:32.5, y:8.5 }];
-
-// WORLD GEN
-const WW=40, WH=40;
-let WORLD = Array(WH).fill().map(()=>Array(WW).fill(0));
-for(let i=0;i<80;i++){ let x=5+Math.floor(Math.random()*30), y=5+Math.floor(Math.random()*30); WORLD[y][x]=1; }
-function isWall(x,y){ let ix=Math.floor(x), iy=Math.floor(y); if(ix<0||ix>=WW||iy<0||iy>=WH) return true; return WORLD[iy][ix]===1; }
-function getZone(x,y){ return 'city'; }
-
-function form(){ return FORMS[PL.formIdx]; }
-function weapon(){ return PL.weapons[PL.curWp]; }
-function notify(txt, col='#fff'){ notifications.push({text:txt,color:col,timer:2}); renderNotifs(); }
-function renderNotifs(){ let s=document.getElementById('notif-stack'); s.innerHTML=''; notifications.slice(-5).forEach(n=>{ let d=document.createElement('div'); d.className='notif'; d.style.color=n.color; d.textContent=n.text; s.appendChild(d); }); }
-function updateHUD(){
-  document.getElementById('hp-fill').style.width=(PL.hp/PL.maxHp*100)+'%';
-  document.getElementById('sta-fill').style.width=(PL.stamina/PL.maxSta*100)+'%';
-  document.getElementById('en-fill').style.width=(PL.energy/PL.maxEn*100)+'%';
-  document.getElementById('hp-val').textContent=Math.ceil(PL.hp);
-  let wp=weapon(); if(wp){ document.getElementById('ammo-cur').textContent=wp.ammo; }
-  document.getElementById('xp-bar-fill').style.width=(PL.xp/PL.xpNext*100)+'%';
-  document.getElementById('score-disp').textContent=PL.score;
-  document.getElementById('level-disp').textContent='Lv'+PL.level;
-  let f=form(); document.getElementById('form-name').textContent=f.name;
-  document.getElementById('form-name').style.color=`rgb(${f.aura[0]*255},${f.aura[1]*255},${f.aura[2]*255})`;
-  for(let i=0;i<5;i++){ let cd=PL.abilityCds[i]; let fill=document.getElementById('ab-fill'+i); fill.style.height=cd>0?((ABILITIES[i].cd-cd)/ABILITIES[i].cd)*100+'%':'100%'; document.getElementById('ab-cd'+i).textContent=cd>0?cd.toFixed(1):''; document.getElementById('ab'+i).className='ab-slot'+(cd<=0?' ready':''); }
-  if(activeBoss&&activeBoss.alive){ document.getElementById('boss-hp-fill').style.width=(activeBoss.hp/activeBoss.maxHp*100)+'%'; document.getElementById('boss-phase').textContent='PHASE '+activeBoss.phase; }
-}
-function gainXp(amt){ PL.xp+=amt; PL.score+=amt; while(PL.xp>=PL.xpNext){ PL.xp-=PL.xpNext; PL.level++; PL.xpNext=Math.floor(PL.xpNext*1.4); PL.maxHp+=15; PL.hp=PL.maxHp; PL.maxSta+=8; PL.maxEn+=10; notify('LEVEL '+PL.level+'!','#ffcc00'); FORMS.forEach((f,i)=>{ if(PL.level>=f.lvlReq) PL.unlockedForms.add(i); }); } }
-function damagePlayer(dmg){ if(PL.iFrames>0) return; let actual=Math.max(1,dmg-5); PL.hp=Math.max(0,PL.hp-actual); PL.hitFlash=0.4; PL.iFrames=0.5; addShake(actual/5); if(PL.hp<=0){ PL.alive=false; gameState='dead'; showDeath(); } }
-function addShake(amount){ screenShake=Math.min(0.8, screenShake+amount); }
-function hitEnemy(e, dmg){ let actual=Math.floor(dmg * form().dmgM); e.hp-=actual; e.hitT=0.2; damageNums.push({x:e.x,y:e.y,val:actual,life:0.8}); addShake(0.08); if(e.hp<=0){ e.alive=false; gainXp(e.def.xp); PL.gold+=e.def.gold; PL.kills++; PL.combo++; PL.comboT=2; PL.score+=e.def.xp*PL.combo; notify('+'+e.def.xp+' XP','#88ff88'); } return actual; }
-function hitBoss(dmg){ if(!activeBoss) return; activeBoss.hp-=dmg; activeBoss.hitT=0.2; addShake(0.15); if(activeBoss.hp<=0){ activeBoss.alive=false; gainXp(activeBoss.def.xp); PL.gold+=activeBoss.def.gold; notify(activeBoss.name+' DEFEATED!','#ffaa00'); document.getElementById('boss-bar-wrap').style.display='none'; activeBoss=null; } }
-function shoot(){
-  let wp=weapon(); if(!wp||PL.shootCd>0||wp.ammo<=0) return;
-  wp.ammo--; PL.shootCd=60/wp.rpm; PL.muzzleT=0.2; addShake(0.04);
-  for(let p=0;p<wp.pellets;p++){ let ang=PL.angle+(Math.random()-0.5)*(wp.pellets>1?0.12:0.02); let ca=Math.cos(ang),sa=Math.sin(ang); for(let s=1;s<wp.range*4;s++){ let sx=PL.x+ca*s*0.25,sy=PL.y+sa*s*0.25; if(isWall(sx,sy)) break; for(let e of enemies){ if(e.alive && Math.hypot(e.x-sx,e.y-sy)<0.6){ hitEnemy(e,wp.dmg); return; } } if(activeBoss&&activeBoss.alive&&Math.hypot(activeBoss.x-sx,activeBoss.y-sy)<1.2){ hitBoss(wp.dmg); return; } } }
-}
-function useAbility(i){
-  let ab=ABILITIES[i]; if(PL.abilityCds[i]>0||PL.energy<ab.cost) return;
-  PL.energy-=ab.cost; PL.abilityCds[i]=ab.cd; addShake(0.2);
-  if(ab.type==='teleport'){ for(let s=1;s<20;s++){ let nx=PL.x+Math.cos(PL.angle)*s*0.3,ny=PL.y+Math.sin(PL.angle)*s*0.3; if(isWall(nx,ny)) break; PL.x=nx; PL.y=ny; } }
-  else{ for(let e of enemies) if(e.alive&&Math.hypot(e.x-PL.x,e.y-PL.y)<6) hitEnemy(e,ab.dmg); if(activeBoss&&activeBoss.alive&&Math.hypot(activeBoss.x-PL.x,activeBoss.y-PL.y)<8) hitBoss(ab.dmg); }
-  notify(ab.name,'#ffaa44');
-}
-function useUltimate(){ if(PL.formIdx===0||PL.energy<50) return; PL.energy-=50; let dmg=300*form().dmgM; enemies.forEach(e=>{ if(e.alive) hitEnemy(e,dmg); }); if(activeBoss) hitBoss(dmg); addShake(0.5); notify('ULTIMATE: '+form().name,'#ffff00'); }
-function toggleForm(){ if(PL.formIdx===0){ for(let i=1;i<FORMS.length;i++) if(PL.unlockedForms.has(i)){ PL.formIdx=i; PL.transformT=1.2; notify(FORMS[i].name+' ACTIVATED!','#ffaa44'); break; } } else { PL.formIdx=0; PL.transformT=0.8; notify('BASE FORM','#88aaff'); } }
-function reload(){ let wp=weapon(); if(wp.ammo<wp.maxAmmo&&wp.reserve>0){ let need=wp.maxAmmo-wp.ammo; let take=Math.min(need,wp.reserve); wp.ammo+=take; wp.reserve-=take; notify('RELOADED'); } }
-function tryInteract(){ for(let ch of chests) if(!ch.opened&&Math.hypot(ch.x-PL.x,ch.y-PL.y)<2){ ch.opened=true; PL.gold+=100; notify('CHEST! +100 GOLD','#ffcc00'); addShake(0.1); return; } }
-function spawnEnemies(){ enemies=[]; for(let i=0;i<5;i++){ let type=['bandit','mutant','robot'][Math.floor(Math.random()*3)]; enemies.push({ type, x:12+Math.random()*20, y:12+Math.random()*15, alive:true, hp:ETYPES[type].hp, def:ETYPES[type], hitT:0, atkT:0 }); } }
-function triggerBoss(){ if(!activeBoss&&!PL.bossKills.boss1){ activeBoss={ key:'boss1', def:BOSSES.boss1, name:'TITAN KING', alive:true, x:25, y:20, hp:4000, maxHp:4000, phase:1, hitT:0 }; document.getElementById('boss-bar-wrap').style.display='block'; document.getElementById('boss-name').textContent='TITAN KING'; notify('TITAN KING AWAKENS!','#ff4400'); addShake(0.4); } }
-function spawnChests(){ chests=[{x:18,y:15,rarity:'rare',opened:false},{x:30,y:25,rarity:'legendary',opened:false}]; }
-
-// RAYCASTER SIMPLIFIED WITH SPRITES
-function drawGame(){
-  if(gameState!=='playing' && gameState!=='dialogue') return;
-  ctx.fillStyle='#0a0a2a'; ctx.fillRect(0,0,SW,SH);
-  // Draw enemies as visible sprites
-  for(let e of enemies){
-    if(!e.alive) continue;
-    let dx=e.x-PL.x, dy=e.y-PL.y;
-    let dist=Math.hypot(dx,dy);
-    if(dist>12) continue;
-    let ang=Math.atan2(dy,dx)-PL.angle;
-    let sz=Math.min(60, 200/dist);
-    let sx=HW+Math.sin(ang)*120;
-    let sy=HH-40;
-    let col=e.hitT>0?'#ff8888':`rgb(${e.def.col[0]*255},${e.def.col[1]*255},${e.def.col[2]*255})`;
-    ctx.fillStyle=col; ctx.fillRect(sx-sz/2, sy-sz/2, sz, sz);
-    ctx.fillStyle='#ff0000'; ctx.fillRect(sx-sz/2, sy-sz/2-8, sz*(e.hp/e.def.hp), 4);
-  }
-  if(activeBoss&&activeBoss.alive){
-    let dx=activeBoss.x-PL.x, dy=activeBoss.y-PL.y;
-    let dist=Math.hypot(dx,dy);
-    let sz=Math.min(120, 300/dist);
-    let sx=HW+Math.sin(Math.atan2(dy,dx)-PL.angle)*80;
-    ctx.fillStyle=activeBoss.hitT>0?'#ffaaaa':'#ff6633';
-    ctx.fillRect(sx-sz/2, HH-80, sz, sz);
-    ctx.fillStyle='#ff0000'; ctx.fillRect(sx-sz/2, HH-80-10, sz*(activeBoss.hp/activeBoss.maxHp), 6);
-  }
-  // aura effect
-  if(PL.transformT>0 || form().tier>0){
-    let a=form().aura; let alpha=Math.min(0.5, PL.transformT*0.8+0.2);
-    ctx.globalAlpha=alpha; ctx.fillStyle=`rgba(${a[0]*255},${a[1]*255},${a[2]*255},0.3)`; ctx.fillRect(0,0,SW,SH); ctx.globalAlpha=1;
-  }
-  // damage numbers
-  for(let dn of damageNums){ ctx.fillStyle='#ff8844'; ctx.font='bold 14px monospace'; ctx.fillText(dn.val, HW+Math.sin(Date.now()*0.01)*10, HH-40+dn.life*20); }
-  damageNums=damageNums.filter(d=>d.life>0);
-  // screen shake effect
-  if(screenShake>0){ ctx.save(); ctx.translate((Math.random()-0.5)*screenShake*10, (Math.random()-0.5)*screenShake*8); screenShake*=0.92; }
-  ctx.restore();
-}
-function drawMinimap(){
-  mmCtx.fillStyle='#111'; mmCtx.fillRect(0,0,130,130);
-  enemies.forEach(e=>{ if(e.alive){ mmCtx.fillStyle='#ff3333'; mmCtx.fillRect(e.x*2.5, e.y*2.5, 4,4); } });
-  mmCtx.fillStyle='#44ff88'; mmCtx.fillRect(PL.x*2.5, PL.y*2.5, 5,5);
-}
-function renderInv(){ document.getElementById('inv-content').innerHTML=`<div>Level ${PL.level} | Gold ${PL.gold}<br>Form: ${form().name}<br>Kills: ${PL.kills}</div>`; }
-function showDeath(){ document.getElementById('death-stats').innerHTML=`<div class="stat-row">SCORE ${PL.score}</div><div class="stat-row">KILLS ${PL.kills}</div>`; document.getElementById('death-screen').classList.remove('hidden'); }
-function pauseGame(){ gameState='paused'; document.getElementById('pause-menu').classList.remove('hidden'); }
-function resumeGame(){ gameState='playing'; document.getElementById('pause-menu').classList.add('hidden'); }
-function quitToMenu(){ gameState='menu'; document.getElementById('main-menu').classList.remove('hidden'); document.getElementById('pause-menu').classList.add('hidden'); document.getElementById('death-screen').classList.add('hidden'); document.getElementById('boss-bar-wrap').style.display='none'; }
-function startGame(){
-  PL={ x:10.5,y:10.5,angle:0,alive:true,hp:100,maxHp:100,stamina:100,maxSta:100,energy:100,maxEn:100,level:1,xp:0,xpNext:100,skillPts:0,skills:{str:0,def:0,spd:0},formIdx:0,unlockedForms:new Set([0]),transformT:0,weapons:[{name:'PLASMA PISTOL',dmg:25,rpm:360,range:20,pellets:1,ammo:30,maxAmmo:30,reserve:999}],curWp:0,gold:0,kills:0,score:0,abilityCds:[0,0,0,0,0],hitFlash:0,iFrames:0,combo:0,comboT:0,shootCd:0,muzzleT:0,vx:0,vy:0,sprinting:false,dashCd:0,questsDone:new Set(),bossKills:{},zonesVisited:new Set() };
-  enemies=[]; loots=[]; activeBoss=null; notifications=[]; damageNums=[]; screenShake=0;
-  spawnEnemies(); spawnChests();
-  document.getElementById('main-menu').classList.add('hidden'); document.getElementById('death-screen').classList.add('hidden'); document.getElementById('pause-menu').classList.add('hidden'); document.getElementById('inv-screen').classList.add('hidden'); document.getElementById('map-screen').classList.add('hidden'); document.getElementById('dialogue').style.display='none'; gameState='playing'; notify('WELCOME TO NEXUS!','#aaffff'); notify('PRESS Q TO TRANSFORM','#ffaa44');
-}
-let Keys={};
-window.addEventListener('keydown',e=>{ Keys[e.code]=true; if(e.code==='Escape'){ if(gameState==='playing') pauseGame(); else if(gameState==='paused') resumeGame(); } if(gameState==='playing'){ if(e.code==='Space') shoot(); if(e.code==='KeyR') reload(); if(e.code==='KeyQ') toggleForm(); if(e.code==='KeyZ') useUltimate(); if(e.code==='KeyE') tryInteract(); for(let i=1;i<=5;i++) if(e.code==='Digit'+i) useAbility(i-1); if(e.code==='Tab'){ gameState='inventory'; renderInv(); document.getElementById('inv-screen').classList.remove('hidden'); } if(e.code==='KeyM'){ gameState='map'; document.getElementById('map-screen').classList.remove('hidden'); } } });
-window.addEventListener('keyup',e=>{ Keys[e.code]=false; });
-let lastTime=0;
-function gameLoop(now){
-  requestAnimationFrame(gameLoop);
-  let dt=Math.min(0.033, (now-lastTime)/1000); lastTime=now;
-  if(dt<=0) return;
-  if(gameState==='playing'){
-    // Movement with acceleration
-    let acc=18*dt, friction=0.85, maxSpeed=6.5*form().spdM*(PL.sprinting?1.8:1);
-    let moveX=0, moveY=0;
-    if(Keys['KeyW']) moveY=1; if(Keys['KeyS']) moveY=-1;
-    if(Keys['KeyA']) moveX=-1; if(Keys['KeyD']) moveX=1;
-    if(moveX!==0||moveY!==0){ let len=Math.hypot(moveX,moveY); moveX/=len; moveY/=len; PL.vx+=moveX*acc; PL.vy+=moveY*acc; }
-    PL.vx*=friction; PL.vy*=friction;
-    let spd=Math.min(maxSpeed, Math.hypot(PL.vx,PL.vy));
-    if(spd>0.1){ let nx=PL.x+PL.vx/spd*spd*dt, ny=PL.y+PL.vy/spd*spd*dt; if(!isWall(nx,PL.y)) PL.x=nx; if(!isWall(PL.x,ny)) PL.y=ny; }
-    if(Keys['ShiftLeft']) PL.sprinting=true; else PL.sprinting=false;
-    if(Keys['KeyA']||Keys['KeyD']) PL.angle+= (Keys['KeyD']?2.5:-2.5)*dt;
-    
-    PL.shootCd=Math.max(0,PL.shootCd-dt); PL.muzzleT=Math.max(0,PL.muzzleT-dt*8); PL.hitFlash=Math.max(0,PL.hitFlash-dt*3); PL.iFrames=Math.max(0,PL.iFrames-dt); PL.transformT=Math.max(0,PL.transformT-dt); PL.comboT=Math.max(0,PL.comboT-dt); if(PL.comboT<=0)PL.combo=1; PL.abilityCds=PL.abilityCds.map(c=>Math.max(0,c-dt));
-    PL.hp=Math.min(PL.maxHp, PL.hp+3*dt); PL.stamina=Math.min(PL.maxSta, PL.stamina+20*dt); PL.energy=Math.min(PL.maxEn, PL.energy+8*dt);
-    if(form().eDrain>0&&PL.formIdx>0) PL.energy=Math.max(0,PL.energy-form().eDrain*dt);
-    
-    for(let e of enemies){ if(!e.alive) continue; e.hitT=Math.max(0,e.hitT-dt); e.atkT=Math.max(0,e.atkT-dt); let dx=PL.x-e.x,dy=PL.y-e.y,dist=Math.hypot(dx,dy); if(dist<1.2&&e.atkT<=0){ e.atkT=1.0; damagePlayer(e.def.dmg); addShake(0.1); } if(dist>1.5){ let sp=e.def.spd*dt; e.x+=dx/dist*sp; e.y+=dy/dist*sp; } }
-    enemies=enemies.filter(e=>e.alive);
-    if(activeBoss&&activeBoss.alive){ let dx=PL.x-activeBoss.x,dy=PL.y-activeBoss.y,dist=Math.hypot(dx,dy); activeBoss.x+=dx/dist*1.8*dt; activeBoss.y+=dy/dist*1.8*dt; if(dist<1.5&&activeBoss.atkT<=0){ activeBoss.atkT=1.2; damagePlayer(40); addShake(0.25); } activeBoss.atkT=Math.max(0,activeBoss.atkT-dt); }
-    let zone=getZone(PL.x,PL.y); if(!PL.zonesVisited.has(zone)){ PL.zonesVisited.add(zone); if(zone==='city'&&!PL.bossKills.boss1&&PL.kills>3) triggerBoss(); }
-    drawGame(); drawMinimap(); updateHUD();
-    if(PL.hp<=0){ gameState='dead'; showDeath(); }
-    // combo display
-    let cd=document.getElementById('combo-val'); if(PL.combo>1){ cd.textContent='x'+PL.combo; cd.style.opacity='1'; setTimeout(()=>cd.style.opacity='0',500); } else cd.style.opacity='0';
-  } else if(gameState==='dialogue'){ drawGame(); drawMinimap(); updateHUD(); }
-}
-startGame();
-requestAnimationFrame(gameLoop);
-</script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        
+        // --- Setup Scene, Camera, Renderer (High Quality) ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050b1a);
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.008);
+        
+        // Camera setup for first-person
+        const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.05, 1000);
+        camera.position.set(0, 1.6, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        document.body.appendChild(renderer.domElement);
+        
+        // Post Processing Bloom (Next-gen effect)
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 0.8;
+        bloomPass.radius = 0.5;
+        const effectComposer = new EffectComposer(renderer);
+        effectComposer.addPass(renderScene);
+        effectComposer.addPass(bloomPass);
+        
+        // --- Lighting System (Dynamic) ---
+        const ambientLight = new THREE.AmbientLight(0x222222);
+        scene.add(ambientLight);
+        const mainLight = new THREE.DirectionalLight(0xffcc88, 1.2);
+        mainLight.position.set(5, 10, 7);
+        mainLight.castShadow = true;
+        mainLight.receiveShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        scene.add(mainLight);
+        const fillLight = new THREE.PointLight(0x4466cc, 0.5);
+        fillLight.position.set(0, 3, 0);
+        scene.add(fillLight);
+        const backLight = new THREE.PointLight(0xff6633, 0.4);
+        backLight.position.set(-2, 2, -4);
+        scene.add(backLight);
+        
+        // Ground with reflections (Grid + Platform)
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.4, metalness: 0.7, emissive: 0x111122 });
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.5;
+        ground.receiveShadow = true;
+        scene.add(ground);
+        
+        // Decorative grid
+        const gridHelper = new THREE.GridHelper(80, 40, 0x33aaff, 0x44aaff);
+        gridHelper.position.y = -0.4;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.3;
+        scene.add(gridHelper);
+        
+        // --- Environment: Neon Trees / Crystals ---
+        const crystalMat = new THREE.MeshStandardMaterial({ color: 0xaa44ff, emissive: 0x4422aa, emissiveIntensity: 0.5, metalness: 0.9 });
+        for (let i = 0; i < 60; i++) {
+            const crystal = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.4, 1.2, 6), crystalMat);
+            const angle = Math.random() * Math.PI * 2;
+            const rad = 15 + Math.random() * 25;
+            crystal.position.x = Math.cos(angle) * rad;
+            crystal.position.z = Math.sin(angle) * rad;
+            crystal.position.y = -0.2;
+            crystal.castShadow = true;
+            scene.add(crystal);
+        }
+        
+        // Floating particles (atmosphere)
+        const particleCount = 800;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            particlePositions[i*3] = (Math.random() - 0.5) * 80;
+            particlePositions[i*3+1] = Math.random() * 8;
+            particlePositions[i*3+2] = (Math.random() - 0.5) * 60;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.08, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+        
+        // --- Player Aura & Effects ---
+        let currentForm = 0; // 0 = base, 1 = rage, 2 = energy
+        let playerHealth = 100;
+        let playerEnergy = 100;
+        let playerLevel = 1;
+        let playerXP = 0;
+        let xpNeeded = 100;
+        let combo = 0;
+        let comboTime = 0;
+        let transformActive = false;
+        let transformGlow = null;
+        
+        // Create dynamic aura sphere that scales with form
+        const auraMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x3366ff, emissiveIntensity: 0.4, transparent: true, opacity: 0.3, side: THREE.BackSide });
+        const auraSphere = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16), auraMat);
+        camera.add(auraSphere);
+        scene.add(camera);
+        
+        // Weapon model (floating energy blade)
+        const bladeMat = new THREE.MeshStandardMaterial({ color: 0xff44aa, emissive: 0xff2288, emissiveIntensity: 0.7 });
+        const weaponModel = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 1.2), bladeMat);
+        weaponModel.position.set(0.4, -0.3, -0.6);
+        camera.add(weaponModel);
+        
+        // --- Enemy System ---
+        class Enemy {
+            constructor(x, z, type) {
+                this.mesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.8), new THREE.MeshStandardMaterial({ color: 0xdd3366, emissive: 0x331122, metalness: 0.3 }));
+                this.mesh.position.set(x, -0.2, z);
+                this.mesh.castShadow = true;
+                this.mesh.receiveShadow = true;
+                this.hp = 50 + (type === 'elite' ? 80 : 0);
+                this.maxHp = this.hp;
+                this.type = type;
+                this.speed = 2.5;
+                this.damage = 12;
+                this.alive = true;
+                scene.add(this.mesh);
+                // Health bar above enemy
+                const barCanvas = document.createElement('canvas');
+                barCanvas.width = 64; barCanvas.height = 16;
+                this.barTexture = new THREE.CanvasTexture(barCanvas);
+                const barMat = new THREE.SpriteMaterial({ map: this.barTexture });
+                this.barSprite = new THREE.Sprite(barMat);
+                this.barSprite.scale.set(0.8, 0.2, 1);
+                this.mesh.add(this.barSprite);
+                this.updateBar();
+            }
+            updateBar() {
+                const canvas = this.barTexture.image;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#330000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ff3366';
+                const percent = this.hp / this.maxHp;
+                ctx.fillRect(0, 0, canvas.width * percent, canvas.height);
+                this.barTexture.needsUpdate = true;
+            }
+            takeDamage(amt) {
+                this.hp -= amt;
+                this.updateBar();
+                if (this.hp <= 0) this.die();
+            }
+            die() {
+                this.alive = false;
+                scene.remove(this.mesh);
+                gainXP(40);
+                spawnLoot(this.mesh.position.x, this.mesh.position.z);
+            }
+            update(delta, playerPos) {
+                if (!this.alive) return;
+                const dir = new THREE.Vector2(playerPos.x - this.mesh.position.x, playerPos.z - this.mesh.position.z).normalize();
+                this.mesh.position.x += dir.x * this.speed * delta;
+                this.mesh.position.z += dir.y * this.speed * delta;
+                this.mesh.lookAt(playerPos.x, this.mesh.position.y, playerPos.z);
+            }
+        }
+        
+        let enemies = [];
+        let projectiles = [];
+        let lootItems = [];
+        
+        function spawnEnemies() {
+            for (let i = 0; i < 8; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 10 + Math.random() * 12;
+                const x = Math.cos(angle) * dist;
+                const z = Math.sin(angle) * dist;
+                const type = Math.random() > 0.7 ? 'elite' : 'normal';
+                enemies.push(new Enemy(x, z, type));
+            }
+        }
+        
+        function spawnLoot(x, z) {
+            const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 }));
+            sphere.position.set(x, 0, z);
+            scene.add(sphere);
+            lootItems.push({ mesh: sphere, type: 'xp', value: 25 });
+        }
+        
+        // --- Combat & Abilities ---
+        function attack() {
+            if (!gameRunning) return;
+            let dmg = 25 + (currentForm * 15);
+            if (combo > 2) dmg *= 1.5;
+            // Screen shake effect via camera position offset
+            let shake = 0.1;
+            camera.position.x += (Math.random() - 0.5) * shake;
+            camera.position.z += (Math.random() - 0.5) * shake;
+            setTimeout(() => { camera.position.x = 0; camera.position.z = 0; }, 80);
+            
+            // Raycast attack
+            const origin = camera.getWorldPosition(new THREE.Vector3());
+            const direction = camera.getWorldDirection(new THREE.Vector3());
+            let hit = false;
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (!e.alive) continue;
+                const toEnemy = e.mesh.position.clone().sub(origin);
+                const dist = toEnemy.length();
+                if (dist < 2.5 && direction.dot(toEnemy.normalize()) > 0.6) {
+                    e.takeDamage(dmg);
+                    hit = true;
+                    combo++;
+                    comboTime = 2.5;
+                    showComboText(combo);
+                    // Impact effect
+                    const impactGlow = new THREE.PointLight(0xff6600, 1, 3);
+                    impactGlow.position.copy(e.mesh.position);
+                    scene.add(impactGlow);
+                    setTimeout(() => scene.remove(impactGlow), 150);
+                    break;
+                }
+            }
+            if (!hit) combo = 0;
+            // Weapon swing animation
+            weaponModel.rotation.x = -0.8;
+            setTimeout(() => weaponModel.rotation.x = 0, 120);
+        }
+        
+        function useAbility(index) {
+            if (!gameRunning || playerEnergy < 20) return;
+            playerEnergy -= 20;
+            updateUI();
+            addScreenShake(0.15);
+            const abilityColors = [0xff3366, 0x33ff66, 0x66aaff, 0xffaa44];
+            const abilityLight = new THREE.PointLight(abilityColors[index % abilityColors.length], 1.5, 8);
+            abilityLight.position.copy(camera.position);
+            scene.add(abilityLight);
+            setTimeout(() => scene.remove(abilityLight), 200);
+            
+            // Damage all nearby enemies
+            for (let e of enemies) {
+                if (!e.alive) continue;
+                const dist = camera.position.distanceTo(e.mesh.position);
+                if (dist < 5) e.takeDamage(45 + currentForm * 20);
+            }
+            addNotification("ABILITY BLAST!", "#ffaa44");
+        }
+        
+        function useUltimate() {
+            if (!gameRunning || playerEnergy < 50) return;
+            playerEnergy -= 50;
+            updateUI();
+            addScreenShake(0.4);
+            for (let e of enemies) {
+                e.takeDamage(120 + currentForm * 40);
+            }
+            addNotification("⚡ ULTIMATE NEXUS STRIKE ⚡", "#ff66ff");
+            // Flash effect
+            document.body.style.backgroundColor = "rgba(255,100,200,0.3)";
+            setTimeout(() => document.body.style.backgroundColor = "", 200);
+        }
+        
+        function transformForm() {
+            currentForm = (currentForm + 1) % 3;
+            const colors = [0x88aaff, 0xff4466, 0x66ffcc];
+            const intensities = [0.4, 0.9, 1.2];
+            auraMat.color.setHex(colors[currentForm]);
+            auraMat.emissiveIntensity = intensities[currentForm];
+            addNotification(`FORM: ${currentForm === 0 ? 'BASE' : currentForm === 1 ? 'RAGE' : 'ENERGY'}`, "#ffffff");
+            // Special effect: particles burst
+            for (let i = 0; i < 30; i++) {
+                const particle = new THREE.Mesh(new THREE.SphereGeometry(0.05, 4, 4), new THREE.MeshStandardMaterial({ color: colors[currentForm], emissive: true }));
+                particle.position.copy(camera.position);
+                particle.userData = { life: 0.5, velocity: new THREE.Vector3((Math.random() - 0.5) * 2, Math.random() * 2, (Math.random() - 0.5) * 2) };
+                scene.add(particle);
+                setTimeout(() => scene.remove(particle), 500);
+            }
+        }
+        
+        // UI Helpers
+        function updateUI() {
+            document.getElementById('hp-fill').style.width = `${(playerHealth / 100) * 100}%`;
+            document.getElementById('energy-fill').style.width = `${(playerEnergy / 100) * 100}%`;
+            document.getElementById('hp-value').innerHTML = Math.floor(playerHealth);
+            document.getElementById('level-num').innerHTML = playerLevel;
+            document.getElementById('xp-fill').style.width = `${(playerXP / xpNeeded) * 100}%`;
+        }
+        
+        function gainXP(amount) {
+            playerXP += amount;
+            while (playerXP >= xpNeeded) {
+                playerXP -= xpNeeded;
+                playerLevel++;
+                xpNeeded = Math.floor(xpNeeded * 1.35);
+                playerHealth = Math.min(100, playerHealth + 20);
+                playerEnergy = Math.min(100, playerEnergy + 15);
+                addNotification(`LEVEL UP! ${playerLevel}`, "#ffcc44");
+            }
+            updateUI();
+        }
+        
+        function addNotification(msg, color) {
+            const div = document.createElement('div');
+            div.className = 'notif';
+            div.style.borderLeftColor = color;
+            div.style.color = color;
+            div.innerText = msg;
+            document.getElementById('notif-container').appendChild(div);
+            setTimeout(() => div.remove(), 2000);
+        }
+        
+        function showComboText(val) {
+            const el = document.getElementById('combat-text');
+            el.innerText = `x${val} COMBO!`;
+            el.style.opacity = '1';
+            setTimeout(() => el.style.opacity = '0', 400);
+        }
+        
+        function addScreenShake(intensity) {
+            camera.position.x += (Math.random() - 0.5) * intensity;
+            camera.position.z += (Math.random() - 0.5) * intensity;
+            setTimeout(() => { camera.position.x = 0; camera.position.z = 0; }, 100);
+        }
+        
+        // Movement & Input
+        const keyState = { w: false, s: false, a: false, d: false, shift: false };
+        let moveSpeed = 5.5;
+        let mouseX = 0, mouseY = 0;
+        let pitch = 0, yaw = -Math.PI / 4;
+        let gameRunning = false;
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!gameRunning) return;
+            yaw -= e.movementX * 0.003;
+            pitch -= e.movementY * 0.003;
+            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+        });
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            if (e.code === 'KeyW') keyState.w = true;
+            if (e.code === 'KeyS') keyState.s = true;
+            if (e.code === 'KeyA') keyState.a = true;
+            if (e.code === 'KeyD') keyState.d = true;
+            if (e.code === 'ShiftLeft') keyState.shift = true;
+            if (e.code === 'Digit1') useAbility(0);
+            if (e.code === 'Digit2') useAbility(1);
+            if (e.code === 'Digit3') useAbility(2);
+            if (e.code === 'Digit4') useAbility(3);
+            if (e.code === 'KeyR') useUltimate();
+            if (e.code === 'KeyQ') transformForm();
+            if (e.code === 'Space') attack();
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') keyState.w = false;
+            if (e.code === 'KeyS') keyState.s = false;
+            if (e.code === 'KeyA') keyState.a = false;
+            if (e.code === 'KeyD') keyState.d = false;
+            if (e.code === 'ShiftLeft') keyState.shift = false;
+        });
+        document.addEventListener('click', () => {
+            if (gameRunning) attack();
+        });
+        
+        function updateMovement(delta) {
+            if (!gameRunning) return;
+            let speed = moveSpeed * (keyState.shift ? 2.2 : 1.0) * (currentForm === 2 ? 1.5 : 1.0);
+            const forward = camera.getWorldDirection(new THREE.Vector3());
+            const right = new THREE.Vector3().crossVectors(camera.up, forward).normalize();
+            let move = new THREE.Vector3(0, 0, 0);
+            if (keyState.w) move.z -= 1;
+            if (keyState.s) move.z += 1;
+            if (keyState.a) move.x -= 1;
+            if (keyState.d) move.x += 1;
+            move.normalize();
+            const vel = new THREE.Vector3();
+            vel.addScaledVector(forward, move.z * speed * delta);
+            vel.addScaledVector(right, move.x * speed * delta);
+            camera.position.add(vel);
+            // Boundary
+            camera.position.x = Math.max(-28, Math.min(28, camera.position.x));
+            camera.position.z = Math.max(-28, Math.min(28, camera.position.z));
+            
+            // Update particle system rotation for aesthetics
+            particles.rotation.y += 0.005;
+        }
+        
+        // Boss Spawn logic
+        let boss = null;
+        function spawnBoss() {
+            if (boss) return;
+            const bossMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.2, 1.5), new THREE.MeshStandardMaterial({ color: 0xdd1144, emissive: 0x441122, metalness: 0.8 }));
+            bossMesh.position.set(12, -0.3, 10);
+            bossMesh.castShadow = true;
+            scene.add(bossMesh);
+            boss = { mesh: bossMesh, hp: 300, maxHp: 300, alive: true };
+            document.getElementById('boss-bar').style.display = 'block';
+            document.getElementById('boss-name').innerText = "★ VOID TITAN ★";
+            addNotification("BOSS APPROACHES!", "#ff3366");
+        }
+        
+        function updateBoss() {
+            if (boss && boss.alive) {
+                const percent = boss.hp / boss.maxHp;
+                document.getElementById('boss-hp').style.width = `${percent * 100}%`;
+                if (boss.hp <= 0) {
+                    scene.remove(boss.mesh);
+                    boss = null;
+                    document.getElementById('boss-bar').style.display = 'none';
+                    gainXP(300);
+                    addNotification("BOSS DEFEATED! EPIC LOOT!", "#ffaa44");
+                }
+            }
+        }
+        
+        // Game Loop
+        let lastTime = 0;
+        function animate(time) {
+            requestAnimationFrame(animate);
+            const delta = Math.min(0.033, (time - lastTime) / 1000);
+            lastTime = time;
+            if (!gameRunning) {
+                effectComposer.render();
+                return;
+            }
+            updateMovement(delta);
+            // Update enemies AI
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                e.update(delta, camera.position);
+                // Enemy attack
+                if (e.alive && camera.position.distanceTo(e.mesh.position) < 1.2) {
+                    playerHealth -= e.damage * delta * 2;
+                    if (playerHealth <= 0) die();
+                    updateUI();
+                    addScreenShake(0.08);
+                }
+            }
+            // Clean dead enemies
+            enemies = enemies.filter(e => e.alive);
+            // Loot collection
+            for (let i = 0; i < lootItems.length; i++) {
+                const loot = lootItems[i];
+                if (camera.position.distanceTo(loot.mesh.position) < 1.2) {
+                    scene.remove(loot.mesh);
+                    lootItems.splice(i, 1);
+                    gainXP(20);
+                    addNotification("+20 XP", "#88ff88");
+                    break;
+                }
+            }
+            // Spawn boss condition
+            if (enemies.length === 0 && !boss && gameRunning) {
+                spawnBoss();
+                spawnEnemies();
+            }
+            if (boss && boss.alive && camera.position.distanceTo(boss.mesh.position) < 2) {
+                playerHealth -= 35 * delta;
+                updateUI();
+                if (playerHealth <= 0) die();
+            }
+            updateBoss();
+            // Regeneration
+            playerHealth = Math.min(100, playerHealth + 8 * delta);
+            playerEnergy = Math.min(100, playerEnergy + 12 * delta);
+            if (comboTime > 0) comboTime -= delta; else combo = 0;
+            updateUI();
+            // Aura intensity based on form
+            auraMat.emissiveIntensity = 0.4 + currentForm * 0.5 + Math.sin(time * 0.01) * 0.1;
+            
+            effectComposer.render();
+        }
+        
+        function die() {
+            gameRunning = false;
+            document.getElementById('death-screen').classList.remove('hidden');
+        }
+        
+        function startGame() {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('death-screen').classList.add('hidden');
+            gameRunning = true;
+            playerHealth = 100; playerEnergy = 100; playerLevel = 1; playerXP = 0; currentForm = 0;
+            enemies.forEach(e => scene.remove(e.mesh));
+            enemies = [];
+            lootItems.forEach(l => scene.remove(l.mesh));
+            lootItems = [];
+            if (boss) scene.remove(boss.mesh);
+            boss = null;
+            camera.position.set(0, 1.6, 0);
+            yaw = -Math.PI/4; pitch = 0;
+            camera.rotation.y = yaw; camera.rotation.x = pitch;
+            spawnEnemies();
+            updateUI();
+            addNotification("NEXUS POWER ACTIVATED", "#66ccff");
+        }
+        
+        window.startGame = startGame;
+        window.restartGame = () => { startGame(); };
+        window.quitToMenu = () => {
+            gameRunning = false;
+            document.getElementById('menu-screen').classList.remove('hidden');
+            document.getElementById('death-screen').classList.add('hidden');
+        };
+        window.showControls = () => {
+            const ctrl = document.getElementById('controls-info');
+            ctrl.style.display = ctrl.style.display === 'none' ? 'block' : 'none';
+        };
+        
+        // Initialize abilities UI
+        const abilityNames = ["NEXUS SLASH", "ENERGY WAVE", "COSMIC SHIELD", "VOID STRIKE"];
+        const bar = document.getElementById('ability-bar');
+        abilityNames.forEach((name, i) => {
+            const div = document.createElement('div');
+            div.className = 'ability ready';
+            div.innerHTML = `<span style="font-size:16px">${i+1}</span><span style="font-size:7px">${name}</span>`;
+            bar.appendChild(div);
+        });
+        
+        animate(0);
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            effectComposer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Initial menu state
+        gameRunning = false;
+    </script>
 </body>
 </html>
