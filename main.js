@@ -1,3 +1,4 @@
+// main.js
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
@@ -7,27 +8,20 @@ const finalScoreEl = document.getElementById('final-score');
 
 let score = 0;
 let gameRunning = false;
-let gravity = 0.6;
-let velocity = 0;
-let playerY = 300;
-const playerX = 150;
-const playerSize = 40;
-
 let obstacles = [];
 let frame = 0;
 let speed = 4;
 
+// Keyboard controls
 window.addEventListener('keydown', e => {
-    if ((e.key === ' ' || e.key === 'Spacebar') && gameRunning) jump();
+    if ((e.key === ' ' || e.key === 'Spacebar') && gameRunning) {
+        jump();
+    }
 });
 
 canvas.addEventListener('click', () => {
     if (gameRunning) jump();
 });
-
-function jump() {
-    if (playerY >= 300) velocity = -15;
-}
 
 function spawnObstacle() {
     const height = 60 + Math.random() * 80;
@@ -39,36 +33,22 @@ function spawnObstacle() {
     });
 }
 
-function update() {
-    if (!gameRunning) return;
-
-    velocity += gravity;
-    playerY += velocity;
-
-    if (playerY >= 300) {
-        playerY = 300;
-        velocity = 0;
-    }
-
-    frame++;
-    if (frame % 70 === 0) {
-        spawnObstacle();
-        if (speed < 9) speed += 0.1;
-    }
-
+function updateObstacles() {
     for (let i = obstacles.length - 1; i >= 0; i--) {
         const obs = obstacles[i];
         obs.x -= speed;
 
+        // Collision with player
         if (
-            playerX + playerSize > obs.x &&
-            playerX < obs.x + obs.width &&
-            playerY + playerSize > obs.y
+            player.x + player.size > obs.x &&
+            player.x < obs.x + obs.width &&
+            player.y + player.size > obs.y
         ) {
             endGame();
             return;
         }
 
+        // Remove off-screen obstacles
         if (obs.x + obs.width < 0) {
             obstacles.splice(i, 1);
             score += 10;
@@ -77,16 +57,26 @@ function update() {
     }
 }
 
+function update() {
+    if (!gameRunning) return;
+
+    updatePlayer();
+    updateObstacles();
+
+    // Spawn obstacles
+    frame++;
+    if (frame % 70 === 0) {
+        spawnObstacle();
+        if (speed < 9) speed += 0.1;
+    }
+}
+
 function draw() {
+    // Background
     ctx.fillStyle = '#0a0a1f';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Player
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = '#00ffcc';
-    ctx.fillStyle = '#00ffcc';
-    ctx.fillRect(playerX, playerY, playerSize, playerSize);
-    ctx.shadowBlur = 0;
+    drawPlayer();
 
     // Obstacles
     ctx.shadowBlur = 20;
@@ -97,6 +87,7 @@ function draw() {
     }
     ctx.shadowBlur = 0;
 
+    // Ground
     ctx.fillStyle = '#00ffcc';
     ctx.fillRect(0, 340, canvas.width, 10);
 }
@@ -122,11 +113,13 @@ function endGame() {
 function resetGame() {
     score = 0;
     scoreEl.textContent = '0';
-    playerY = 300;
-    velocity = 0;
+    player.y = 300;
+    player.velocity = 0;
+    player.grounded = true;
     obstacles = [];
     frame = 0;
     speed = 4;
+    gameOverScreen.style.display = 'none';
 }
 
 function restartGame() {
@@ -134,5 +127,6 @@ function restartGame() {
     gameRunning = true;
 }
 
+// Initialize
 startScreen.style.display = 'block';
 gameLoop();
