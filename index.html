@@ -3,13 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NEXUS CHRONICLES - WebGL Action RPG</title>
+    <title>NEXUS CHRONICLES - Momentum RPG</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Courier New', monospace;
-        }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', 'Courier New', monospace; }
         #ui {
             position: fixed;
             inset: 0;
@@ -17,63 +13,54 @@
             z-index: 20;
             font-family: 'Courier New', monospace;
         }
-        /* HUD Styles */
         .hud-panel {
             position: absolute;
-            background: rgba(0,0,0,0.65);
-            backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
             border-left: 3px solid #ff3366;
-            padding: 8px 15px;
-            border-radius: 0 8px 8px 0;
+            padding: 10px 18px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
         .hud-right {
             right: 20px;
             top: 20px;
-            text-align: right;
             border-left: none;
             border-right: 3px solid #ff3366;
-            border-radius: 8px 0 0 8px;
+            border-radius: 12px 0 0 12px;
+            text-align: right;
         }
         .bar-container {
-            width: 240px;
+            width: 250px;
             height: 8px;
-            background: rgba(0,0,0,0.5);
-            margin: 5px 0;
+            background: rgba(0,0,0,0.6);
             border-radius: 4px;
             overflow: hidden;
+            margin: 5px 0;
         }
         .bar-fill {
             height: 100%;
-            transition: width 0.1s linear;
+            transition: width 0.08s linear;
         }
-        #hp-fill { background: linear-gradient(90deg, #ff3366, #ff6680); box-shadow: 0 0 8px #ff3366; }
-        #energy-fill { background: linear-gradient(90deg, #33ccff, #66ffcc); box-shadow: 0 0 8px #33ccff; }
+        #hp-fill { background: linear-gradient(90deg, #ff3366, #ff6680); box-shadow: 0 0 6px #ff3366; }
+        #energy-fill { background: linear-gradient(90deg, #33ccff, #66ffcc); box-shadow: 0 0 6px #33ccff; }
         #xp-fill { background: linear-gradient(90deg, #aa66ff, #ff66cc); }
-        .stat-text {
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: #ddd;
-            margin-bottom: 4px;
-        }
-        .value-large {
-            font-size: 28px;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
+        .stat-text { font-size: 9px; letter-spacing: 2px; color: #aaa; margin-bottom: 3px; }
+        .value-large { font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.5); line-height: 1; }
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,100,100,0.8) 0%, rgba(255,255,255,0) 70%);
-            border: 1px solid rgba(255,100,100,0.9);
+            background: radial-gradient(circle, rgba(255,80,120,0.9) 0%, rgba(255,255,255,0) 70%);
+            border: 1px solid rgba(255,80,120,0.8);
             pointer-events: none;
+            box-shadow: 0 0 8px #ff3366;
         }
-        .ability-slot {
+        .ability-bar {
             position: absolute;
             bottom: 30px;
             left: 50%;
@@ -81,49 +68,53 @@
             display: flex;
             gap: 12px;
             background: rgba(0,0,0,0.6);
-            padding: 8px 16px;
-            border-radius: 40px;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,51,102,0.3);
         }
-        .ability {
-            width: 50px;
-            height: 50px;
-            border: 1px solid rgba(255,255,255,0.3);
+        .ability-slot {
+            width: 55px;
+            height: 55px;
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 12px;
-            background: rgba(20,20,40,0.8);
+            background: rgba(20,20,40,0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
+            font-size: 8px;
             transition: all 0.1s;
+            color: #ccc;
         }
-        .ability.ready { border-color: #ffaa44; box-shadow: 0 0 15px rgba(255,170,0,0.5); }
+        .ability-slot.ready { border-color: #ffaa44; box-shadow: 0 0 15px rgba(255,170,0,0.6); color: #ffaa44; }
         .notif {
             position: absolute;
             top: 100px;
             right: 20px;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             padding: 8px 16px;
             border-left: 4px solid #ffaa44;
             font-size: 11px;
-            animation: slideIn 0.3s ease;
+            letter-spacing: 1px;
+            animation: slideIn 0.25s ease;
             pointer-events: none;
+            z-index: 100;
         }
         @keyframes slideIn {
-            from { opacity: 0; transform: translateX(50px); }
+            from { opacity: 0; transform: translateX(60px); }
             to { opacity: 1; transform: translateX(0); }
         }
         .screen {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.96);
             backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 100;
+            z-index: 200;
             transition: 0.3s;
         }
         .screen.hidden { display: none; }
@@ -131,7 +122,7 @@
             font-size: 64px;
             font-weight: 900;
             letter-spacing: 12px;
-            background: linear-gradient(135deg, #ff3366, #33ccff);
+            background: linear-gradient(135deg, #ff3366, #33ccff, #aa66ff);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -148,67 +139,75 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .menu-btn:hover {
-            background: #ff3366;
-            box-shadow: 0 0 20px #ff3366;
-            transform: scale(1.05);
-        }
-        #combat-text {
+        .menu-btn:hover { background: #ff3366; box-shadow: 0 0 20px #ff3366; transform: scale(1.05); }
+        #combo-text {
             position: absolute;
-            top: 40%;
-            right: 10%;
-            font-size: 32px;
-            font-weight: bold;
+            top: 45%;
+            right: 8%;
+            font-size: 38px;
+            font-weight: 900;
             color: #ffaa44;
             text-shadow: 0 0 20px #ff6600;
             opacity: 0;
             transition: opacity 0.1s;
             pointer-events: none;
+            font-family: monospace;
+        }
+        #speed-indicator {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            font-size: 11px;
+            color: #88aaff;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
     <div id="ui">
         <div class="hud-panel" style="top:20px; left:20px;">
-            <div class="stat-text">⚡ HEALTH</div>
+            <div class="stat-text">⚡ HEALTH CORE</div>
             <div class="bar-container"><div id="hp-fill" class="bar-fill" style="width:100%"></div></div>
-            <div class="stat-text" style="margin-top:8px">🌀 ENERGY</div>
+            <div class="stat-text" style="margin-top:8px">🌀 NEXUS ENERGY</div>
             <div class="bar-container"><div id="energy-fill" class="bar-fill" style="width:100%"></div></div>
-            <div class="value-large" id="hp-value" style="font-size:18px; margin-top:4px">100</div>
+            <div class="value-large" id="hp-value" style="font-size:18px; margin-top:5px">100</div>
         </div>
         <div class="hud-panel hud-right" style="top:20px; right:20px;">
-            <div class="stat-text">🔫 WEAPON</div>
-            <div id="weapon-name" style="color:#ffaa44; font-weight:bold">PLASMA BLADE</div>
-            <div class="value-large" id="ammo-count" style="font-size:24px">∞</div>
+            <div class="stat-text">🔮 ACTIVE FORM</div>
+            <div id="form-name" style="color:#ffaa66; font-weight:bold; font-size:14px">BASE</div>
             <div class="stat-text" style="margin-top:8px">✨ LEVEL <span id="level-num">1</span></div>
             <div class="bar-container" style="width:160px"><div id="xp-fill" class="bar-fill" style="width:0%"></div></div>
+            <div class="stat-text">🏆 SCORE <span id="score-val">0</span></div>
         </div>
         <div id="crosshair"></div>
-        <div class="ability-slot" id="ability-bar"></div>
-        <div id="notif-container" style="position:absolute; top:100px; right:20px;"></div>
-        <div id="combat-text">x2 COMBO</div>
-        <div id="boss-bar" style="position:absolute; top:80px; left:50%; transform:translateX(-50%); width:400px; display:none;">
-            <div class="stat-text" id="boss-name" style="text-align:center; color:#ff6666">BOSS</div>
+        <div class="ability-bar" id="ability-bar"></div>
+        <div id="notif-container"></div>
+        <div id="combo-text">x0 COMBO</div>
+        <div id="speed-indicator">▸ MOVEMENT: NORMAL</div>
+        <div id="boss-bar" style="position:absolute; top:80px; left:50%; transform:translateX(-50%); width:450px; display:none; background:rgba(0,0,0,0.7); padding:8px; border-radius:8px;">
+            <div class="stat-text" id="boss-name" style="text-align:center; color:#ff6666">★ BOSS ★</div>
             <div class="bar-container"><div id="boss-hp" class="bar-fill" style="width:100%; background:#ff3366"></div></div>
         </div>
     </div>
 
     <div class="screen" id="menu-screen">
         <div class="game-title">NEXUS CHRONICLES</div>
-        <div style="margin:20px 0; letter-spacing:4px; color:#aaa">WEBGL • TRANSFORMATION • ACTION</div>
-        <button class="menu-btn" onclick="startGame()">▶ START GAME</button>
-        <button class="menu-btn" onclick="showControls()">⚙ CONTROLS</button>
-        <div id="controls-info" style="display:none; margin-top:20px; text-align:center; font-size:12px; color:#888">
-            WASD - Move | MOUSE - Look | LEFT CLICK - Attack | SHIFT - Sprint | Q - Transform | R - Ultimate | 1-4 - Abilities
+        <div style="margin:20px 0; letter-spacing:3px; color:#aaa">VELOCITY MOVEMENT • TRANSFORMATION • COMBO SYSTEM</div>
+        <button class="menu-btn" onclick="startGame()">▶ AWAKEN</button>
+        <button class="menu-btn" onclick="toggleControls()">⚙ CONTROLS</button>
+        <div id="controls-info" style="display:none; margin-top:20px; text-align:center; font-size:11px; color:#888; max-width:400px">
+            W/A/S/D - Move with momentum | SHIFT - Sprint | Q - Transform Form | SPACE - Attack/Slash | R - Ultimate | 1-4 - Abilities | Mouse - Look around
         </div>
     </div>
     <div class="screen hidden" id="death-screen">
-        <div class="game-title" style="font-size:48px; color:#ff3366">DEFEATED</div>
-        <button class="menu-btn" onclick="restartGame()">RESTART</button>
+        <div class="game-title" style="font-size:48px; color:#ff3366">THE NEXUS FADES</div>
+        <button class="menu-btn" onclick="restartGame()">⚡ RESTART</button>
         <button class="menu-btn" onclick="quitToMenu()">MENU</button>
     </div>
 
-    <!-- Import Three.js and add-ons -->
     <script type="importmap">
         {
             "imports": {
@@ -220,153 +219,247 @@
 
     <script type="module">
         import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         
-        // --- Setup Scene, Camera, Renderer (High Quality) ---
+        // --- HIGH QUALITY SETUP ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050b1a);
-        scene.fog = new THREE.FogExp2(0x050b1a, 0.008);
+        scene.background = new THREE.Color(0x030318);
+        scene.fog = new THREE.FogExp2(0x030318, 0.012);
         
-        // Camera setup for first-person
         const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.05, 1000);
-        camera.position.set(0, 1.6, 0);
+        camera.position.set(0, 1.65, 0);
         
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.toneMapping = THREE.ReinhardToneMapping;
-        renderer.toneMappingExposure = 1.2;
+        renderer.toneMappingExposure = 1.3;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
         
-        // Post Processing Bloom (Next-gen effect)
+        // Post processing bloom
         const renderScene = new RenderPass(scene, camera);
-        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
-        bloomPass.threshold = 0.1;
-        bloomPass.strength = 0.8;
-        bloomPass.radius = 0.5;
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.1, 0.5, 0.85);
+        bloomPass.threshold = 0.08;
+        bloomPass.strength = 0.9;
         const effectComposer = new EffectComposer(renderer);
         effectComposer.addPass(renderScene);
         effectComposer.addPass(bloomPass);
         
-        // --- Lighting System (Dynamic) ---
-        const ambientLight = new THREE.AmbientLight(0x222222);
-        scene.add(ambientLight);
-        const mainLight = new THREE.DirectionalLight(0xffcc88, 1.2);
-        mainLight.position.set(5, 10, 7);
+        // Lighting
+        const ambient = new THREE.AmbientLight(0x1a1a2e);
+        scene.add(ambient);
+        const mainLight = new THREE.DirectionalLight(0xffccaa, 1.3);
+        mainLight.position.set(6, 12, 5);
         mainLight.castShadow = true;
         mainLight.receiveShadow = true;
         mainLight.shadow.mapSize.width = 1024;
-        mainLight.shadow.mapSize.height = 1024;
         scene.add(mainLight);
-        const fillLight = new THREE.PointLight(0x4466cc, 0.5);
-        fillLight.position.set(0, 3, 0);
+        const fillLight = new THREE.PointLight(0x3377ff, 0.6);
+        fillLight.position.set(0, 2, 0);
         scene.add(fillLight);
-        const backLight = new THREE.PointLight(0xff6633, 0.4);
-        backLight.position.set(-2, 2, -4);
-        scene.add(backLight);
+        const rimLight = new THREE.PointLight(0xff44aa, 0.5);
+        rimLight.position.set(-3, 2, -4);
+        scene.add(rimLight);
         
-        // Ground with reflections (Grid + Platform)
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.4, metalness: 0.7, emissive: 0x111122 });
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), groundMat);
+        // Ground with mirror-like surface
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.25, metalness: 0.85, emissive: 0x050510 });
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), groundMat);
         ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -0.5;
+        ground.position.y = -0.6;
         ground.receiveShadow = true;
         scene.add(ground);
         
-        // Decorative grid
-        const gridHelper = new THREE.GridHelper(80, 40, 0x33aaff, 0x44aaff);
-        gridHelper.position.y = -0.4;
+        // Glowing grid
+        const gridHelper = new THREE.GridHelper(90, 35, 0xff44aa, 0x33aaff);
+        gridHelper.position.y = -0.55;
         gridHelper.material.transparent = true;
-        gridHelper.material.opacity = 0.3;
+        gridHelper.material.opacity = 0.25;
         scene.add(gridHelper);
         
-        // --- Environment: Neon Trees / Crystals ---
-        const crystalMat = new THREE.MeshStandardMaterial({ color: 0xaa44ff, emissive: 0x4422aa, emissiveIntensity: 0.5, metalness: 0.9 });
-        for (let i = 0; i < 60; i++) {
-            const crystal = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.4, 1.2, 6), crystalMat);
+        // Environment crystals / neon trees
+        const crystalMat = new THREE.MeshStandardMaterial({ color: 0xaa55ff, emissive: 0x5511aa, emissiveIntensity: 0.7, metalness: 0.8 });
+        for (let i = 0; i < 70; i++) {
+            const crystal = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.45, 1.3, 5), crystalMat);
             const angle = Math.random() * Math.PI * 2;
-            const rad = 15 + Math.random() * 25;
+            const rad = 14 + Math.random() * 28;
             crystal.position.x = Math.cos(angle) * rad;
             crystal.position.z = Math.sin(angle) * rad;
-            crystal.position.y = -0.2;
+            crystal.position.y = -0.4;
             crystal.castShadow = true;
             scene.add(crystal);
         }
         
-        // Floating particles (atmosphere)
-        const particleCount = 800;
+        // Atmospheric particles (floating dust)
+        const particleCount = 1500;
         const particleGeo = new THREE.BufferGeometry();
-        const particlePositions = new Float32Array(particleCount * 3);
+        const positions = new Float32Array(particleCount * 3);
         for (let i = 0; i < particleCount; i++) {
-            particlePositions[i*3] = (Math.random() - 0.5) * 80;
-            particlePositions[i*3+1] = Math.random() * 8;
-            particlePositions[i*3+2] = (Math.random() - 0.5) * 60;
+            positions[i*3] = (Math.random() - 0.5) * 80;
+            positions[i*3+1] = Math.random() * 8;
+            positions[i*3+2] = (Math.random() - 0.5) * 70;
         }
-        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.08, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
-        const particles = new THREE.Points(particleGeo, particleMat);
-        scene.add(particles);
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particleMatGlow = new THREE.PointsMaterial({ color: 0x77aaff, size: 0.06, transparent: true, blending: THREE.AdditiveBlending });
+        const particleSys = new THREE.Points(particleGeo, particleMatGlow);
+        scene.add(particleSys);
         
-        // --- Player Aura & Effects ---
-        let currentForm = 0; // 0 = base, 1 = rage, 2 = energy
-        let playerHealth = 100;
-        let playerEnergy = 100;
-        let playerLevel = 1;
-        let playerXP = 0;
-        let xpNeeded = 100;
-        let combo = 0;
-        let comboTime = 0;
-        let transformActive = false;
-        let transformGlow = null;
-        
-        // Create dynamic aura sphere that scales with form
-        const auraMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x3366ff, emissiveIntensity: 0.4, transparent: true, opacity: 0.3, side: THREE.BackSide });
-        const auraSphere = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 16), auraMat);
+        // --- PLAYER AURA & WEAPON ---
+        const auraMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x3366ff, emissiveIntensity: 0.5, transparent: true, opacity: 0.35, side: THREE.BackSide });
+        const auraSphere = new THREE.Mesh(new THREE.SphereGeometry(0.95, 24, 24), auraMat);
         camera.add(auraSphere);
         scene.add(camera);
         
-        // Weapon model (floating energy blade)
-        const bladeMat = new THREE.MeshStandardMaterial({ color: 0xff44aa, emissive: 0xff2288, emissiveIntensity: 0.7 });
-        const weaponModel = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 1.2), bladeMat);
-        weaponModel.position.set(0.4, -0.3, -0.6);
-        camera.add(weaponModel);
+        const bladeMat = new THREE.MeshStandardMaterial({ color: 0xff44aa, emissive: 0xff2288, emissiveIntensity: 0.9 });
+        const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 1.3), bladeMat);
+        weapon.position.set(0.45, -0.35, -0.65);
+        camera.add(weapon);
         
-        // --- Enemy System ---
+        // --- MOVEMENT SYSTEM WITH VELOCITY + ACCELERATION ---
+        let velocityX = 0, velocityZ = 0;
+        const acceleration = 22.0;
+        const friction = 0.88;
+        let currentSpeed = 0;
+        let moveState = "IDLE";
+        let formLevel = 0; // 0:base, 1:rage, 2:cosmic
+        let health = 100, maxHealth = 100;
+        let energy = 100, maxEnergy = 100;
+        let level = 1, xp = 0, xpNeeded = 100;
+        let score = 0;
+        let combo = 0, comboTimer = 0;
+        let gameRunning = false;
+        let boss = null;
+        
+        // Input handling
+        const keys = { w: false, s: false, a: false, d: false, shift: false };
+        let mouseX = 0, mouseY = 0;
+        let pitch = 0, yaw = -Math.PI / 4;
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!gameRunning) return;
+            yaw -= e.movementX * 0.0032;
+            pitch -= e.movementY * 0.0032;
+            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            const code = e.code;
+            if (code === 'KeyW') keys.w = true;
+            if (code === 'KeyS') keys.s = true;
+            if (code === 'KeyA') keys.a = true;
+            if (code === 'KeyD') keys.d = true;
+            if (code === 'ShiftLeft') keys.shift = true;
+            if (code === 'Digit1') useAbility(0);
+            if (code === 'Digit2') useAbility(1);
+            if (code === 'Digit3') useAbility(2);
+            if (code === 'Digit4') useAbility(3);
+            if (code === 'KeyR') useUltimate();
+            if (code === 'KeyQ') transformForm();
+            if (code === 'Space') meleeAttack();
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (code === 'KeyW') keys.w = false;
+            if (code === 'KeyS') keys.s = false;
+            if (code === 'KeyA') keys.a = false;
+            if (code === 'KeyD') keys.d = false;
+            if (code === 'ShiftLeft') keys.shift = false;
+        });
+        
+        document.addEventListener('click', () => {
+            if (gameRunning) meleeAttack();
+        });
+        
+        function updateMovement(delta) {
+            if (!gameRunning) return;
+            let moveX = 0, moveZ = 0;
+            if (keys.w) moveZ -= 1;
+            if (keys.s) moveZ += 1;
+            if (keys.a) moveX -= 1;
+            if (keys.d) moveX += 1;
+            if (moveX !== 0 || moveZ !== 0) {
+                const len = Math.hypot(moveX, moveZ);
+                moveX /= len; moveZ /= len;
+            }
+            
+            let speedMult = 1.0;
+            let sprintMult = keys.shift ? 1.9 : 1.0;
+            if (formLevel === 1) speedMult = 1.35;
+            if (formLevel === 2) speedMult = 1.85;
+            const targetAccel = acceleration * speedMult * sprintMult;
+            velocityX += moveX * targetAccel * delta;
+            velocityZ += moveZ * targetAccel * delta;
+            
+            // friction
+            velocityX *= friction;
+            velocityZ *= friction;
+            
+            const forward = camera.getWorldDirection(new THREE.Vector3());
+            const right = new THREE.Vector3().crossVectors(camera.up, forward).normalize();
+            let velWorld = new THREE.Vector3();
+            velWorld.addScaledVector(forward, velocityZ);
+            velWorld.addScaledVector(right, velocityX);
+            
+            camera.position.x += velWorld.x * delta;
+            camera.position.z += velWorld.z * delta;
+            
+            // boundaries
+            camera.position.x = Math.max(-32, Math.min(32, camera.position.x));
+            camera.position.z = Math.max(-32, Math.min(32, camera.position.z));
+            
+            currentSpeed = Math.hypot(velocityX, velocityZ);
+            if (currentSpeed > 0.5) moveState = keys.shift ? "SPRINT" : "RUN";
+            else moveState = "IDLE";
+            
+            // Update UI speed indicator
+            const speedPercent = Math.min(1, currentSpeed / 12);
+            document.getElementById('speed-indicator').innerHTML = `⚡ MOVEMENT: ${moveState} ${Math.floor(currentSpeed * 10)}%`;
+            if (keys.shift && currentSpeed > 4) {
+                document.getElementById('speed-indicator').style.color = "#ffaa66";
+                // FOV boost for sprint
+                camera.fov = 85 + currentSpeed * 1.2;
+                camera.updateProjectionMatrix();
+            } else {
+                camera.fov = 85;
+                camera.updateProjectionMatrix();
+            }
+        }
+        
+        // --- Enemy Class with AI ---
         class Enemy {
-            constructor(x, z, type) {
-                this.mesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.8), new THREE.MeshStandardMaterial({ color: 0xdd3366, emissive: 0x331122, metalness: 0.3 }));
-                this.mesh.position.set(x, -0.2, z);
+            constructor(x, z, type = 'normal') {
+                this.mesh = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.25, 0.85), new THREE.MeshStandardMaterial({ color: 0xdd3366, emissive: 0x441122, metalness: 0.2 }));
+                this.mesh.position.set(x, -0.35, z);
                 this.mesh.castShadow = true;
-                this.mesh.receiveShadow = true;
-                this.hp = 50 + (type === 'elite' ? 80 : 0);
+                scene.add(this.mesh);
+                this.hp = type === 'elite' ? 100 : 55;
                 this.maxHp = this.hp;
                 this.type = type;
-                this.speed = 2.5;
+                this.speed = 2.2;
                 this.damage = 12;
                 this.alive = true;
-                scene.add(this.mesh);
-                // Health bar above enemy
-                const barCanvas = document.createElement('canvas');
-                barCanvas.width = 64; barCanvas.height = 16;
-                this.barTexture = new THREE.CanvasTexture(barCanvas);
-                const barMat = new THREE.SpriteMaterial({ map: this.barTexture });
-                this.barSprite = new THREE.Sprite(barMat);
-                this.barSprite.scale.set(0.8, 0.2, 1);
+                // health bar sprite
+                const canvas = document.createElement('canvas');
+                canvas.width = 64; canvas.height = 12;
+                this.barTex = new THREE.CanvasTexture(canvas);
+                const spriteMat = new THREE.SpriteMaterial({ map: this.barTex });
+                this.barSprite = new THREE.Sprite(spriteMat);
+                this.barSprite.scale.set(0.9, 0.18, 1);
                 this.mesh.add(this.barSprite);
                 this.updateBar();
             }
             updateBar() {
-                const canvas = this.barTexture.image;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#330000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#ff3366';
-                const percent = this.hp / this.maxHp;
-                ctx.fillRect(0, 0, canvas.width * percent, canvas.height);
-                this.barTexture.needsUpdate = true;
+                const ctx = this.barTex.image.getContext('2d');
+                ctx.fillStyle = '#330000'; ctx.fillRect(0, 0, 64, 12);
+                ctx.fillStyle = '#ff3366'; ctx.fillRect(0, 0, 64 * (this.hp / this.maxHp), 12);
+                this.barTex.needsUpdate = true;
             }
             takeDamage(amt) {
                 this.hp -= amt;
@@ -376,153 +469,170 @@
             die() {
                 this.alive = false;
                 scene.remove(this.mesh);
-                gainXP(40);
+                gainXP(45);
+                score += 100;
+                updateScoreUI();
                 spawnLoot(this.mesh.position.x, this.mesh.position.z);
             }
             update(delta, playerPos) {
                 if (!this.alive) return;
-                const dir = new THREE.Vector2(playerPos.x - this.mesh.position.x, playerPos.z - this.mesh.position.z).normalize();
-                this.mesh.position.x += dir.x * this.speed * delta;
-                this.mesh.position.z += dir.y * this.speed * delta;
+                const dx = playerPos.x - this.mesh.position.x;
+                const dz = playerPos.z - this.mesh.position.z;
+                const dist = Math.hypot(dx, dz);
+                if (dist > 0.5) {
+                    const move = this.speed * delta;
+                    this.mesh.position.x += (dx / dist) * move;
+                    this.mesh.position.z += (dz / dist) * move;
+                }
                 this.mesh.lookAt(playerPos.x, this.mesh.position.y, playerPos.z);
+                if (dist < 1.2) {
+                    // attack player
+                    health = Math.max(0, health - this.damage * delta * 1.5);
+                    updateUI();
+                    if (health <= 0) die();
+                    addScreenShake(0.07);
+                }
             }
         }
         
         let enemies = [];
-        let projectiles = [];
-        let lootItems = [];
+        let loots = [];
         
-        function spawnEnemies() {
-            for (let i = 0; i < 8; i++) {
+        function spawnEnemies(count = 6) {
+            for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const dist = 10 + Math.random() * 12;
+                const dist = 9 + Math.random() * 14;
                 const x = Math.cos(angle) * dist;
                 const z = Math.sin(angle) * dist;
-                const type = Math.random() > 0.7 ? 'elite' : 'normal';
+                const type = Math.random() > 0.75 ? 'elite' : 'normal';
                 enemies.push(new Enemy(x, z, type));
             }
         }
         
         function spawnLoot(x, z) {
-            const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 }));
-            sphere.position.set(x, 0, z);
-            scene.add(sphere);
-            lootItems.push({ mesh: sphere, type: 'xp', value: 25 });
+            const orb = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffaa55, emissive: 0x442200, emissiveIntensity: 0.6 }));
+            orb.position.set(x, 0.1, z);
+            scene.add(orb);
+            loots.push(orb);
         }
         
         // --- Combat & Abilities ---
-        function attack() {
+        function meleeAttack() {
             if (!gameRunning) return;
-            let dmg = 25 + (currentForm * 15);
-            if (combo > 2) dmg *= 1.5;
-            // Screen shake effect via camera position offset
-            let shake = 0.1;
-            camera.position.x += (Math.random() - 0.5) * shake;
-            camera.position.z += (Math.random() - 0.5) * shake;
-            setTimeout(() => { camera.position.x = 0; camera.position.z = 0; }, 80);
-            
-            // Raycast attack
+            let dmg = 28 + (formLevel * 18);
+            if (combo > 2) dmg *= 1.4;
+            addScreenShake(0.12);
+            // weapon swing animation
+            weapon.rotation.x = -0.9;
+            setTimeout(() => weapon.rotation.x = 0, 130);
+            // Hit detection
             const origin = camera.getWorldPosition(new THREE.Vector3());
-            const direction = camera.getWorldDirection(new THREE.Vector3());
+            const dir = camera.getWorldDirection(new THREE.Vector3());
             let hit = false;
-            for (let i = 0; i < enemies.length; i++) {
-                const e = enemies[i];
+            for (let e of enemies) {
                 if (!e.alive) continue;
                 const toEnemy = e.mesh.position.clone().sub(origin);
-                const dist = toEnemy.length();
-                if (dist < 2.5 && direction.dot(toEnemy.normalize()) > 0.6) {
+                if (toEnemy.length() < 2.4 && dir.dot(toEnemy.normalize()) > 0.65) {
                     e.takeDamage(dmg);
                     hit = true;
                     combo++;
-                    comboTime = 2.5;
-                    showComboText(combo);
-                    // Impact effect
-                    const impactGlow = new THREE.PointLight(0xff6600, 1, 3);
-                    impactGlow.position.copy(e.mesh.position);
-                    scene.add(impactGlow);
-                    setTimeout(() => scene.remove(impactGlow), 150);
+                    comboTimer = 2.2;
+                    updateComboUI();
+                    // impact flash
+                    const flash = new THREE.PointLight(0xff6600, 1.2, 3);
+                    flash.position.copy(e.mesh.position);
+                    scene.add(flash);
+                    setTimeout(() => scene.remove(flash), 120);
                     break;
                 }
             }
             if (!hit) combo = 0;
-            // Weapon swing animation
-            weaponModel.rotation.x = -0.8;
-            setTimeout(() => weaponModel.rotation.x = 0, 120);
         }
         
-        function useAbility(index) {
-            if (!gameRunning || playerEnergy < 20) return;
-            playerEnergy -= 20;
+        function useAbility(idx) {
+            if (!gameRunning || energy < 18) return;
+            energy = Math.max(0, energy - 18);
             updateUI();
-            addScreenShake(0.15);
-            const abilityColors = [0xff3366, 0x33ff66, 0x66aaff, 0xffaa44];
-            const abilityLight = new THREE.PointLight(abilityColors[index % abilityColors.length], 1.5, 8);
-            abilityLight.position.copy(camera.position);
-            scene.add(abilityLight);
-            setTimeout(() => scene.remove(abilityLight), 200);
-            
-            // Damage all nearby enemies
+            addScreenShake(0.18);
+            const colors = [0xff4466, 0x44ff66, 0x66aaff, 0xffaa44];
+            const light = new THREE.PointLight(colors[idx % colors.length], 1.6, 7);
+            light.position.copy(camera.position);
+            scene.add(light);
+            setTimeout(() => scene.remove(light), 200);
             for (let e of enemies) {
                 if (!e.alive) continue;
-                const dist = camera.position.distanceTo(e.mesh.position);
-                if (dist < 5) e.takeDamage(45 + currentForm * 20);
+                if (camera.position.distanceTo(e.mesh.position) < 5.5) {
+                    e.takeDamage(48 + formLevel * 22);
+                }
             }
-            addNotification("ABILITY BLAST!", "#ffaa44");
+            addNotification("ABILITY STRIKE!", "#ffaa66");
         }
         
         function useUltimate() {
-            if (!gameRunning || playerEnergy < 50) return;
-            playerEnergy -= 50;
+            if (!gameRunning || energy < 45) return;
+            energy = Math.max(0, energy - 45);
             updateUI();
-            addScreenShake(0.4);
-            for (let e of enemies) {
-                e.takeDamage(120 + currentForm * 40);
-            }
-            addNotification("⚡ ULTIMATE NEXUS STRIKE ⚡", "#ff66ff");
-            // Flash effect
-            document.body.style.backgroundColor = "rgba(255,100,200,0.3)";
-            setTimeout(() => document.body.style.backgroundColor = "", 200);
+            addScreenShake(0.45);
+            for (let e of enemies) e.takeDamage(130 + formLevel * 45);
+            addNotification("⚡ ULTIMATE NEXUS WRATH ⚡", "#ff88ff");
+            const flashAll = new THREE.PointLight(0xff66ff, 2, 12);
+            flashAll.position.copy(camera.position);
+            scene.add(flashAll);
+            setTimeout(() => scene.remove(flashAll), 250);
         }
         
         function transformForm() {
-            currentForm = (currentForm + 1) % 3;
+            formLevel = (formLevel + 1) % 3;
+            const formNames = ["BASE", "RAGE", "COSMIC"];
             const colors = [0x88aaff, 0xff4466, 0x66ffcc];
-            const intensities = [0.4, 0.9, 1.2];
-            auraMat.color.setHex(colors[currentForm]);
-            auraMat.emissiveIntensity = intensities[currentForm];
-            addNotification(`FORM: ${currentForm === 0 ? 'BASE' : currentForm === 1 ? 'RAGE' : 'ENERGY'}`, "#ffffff");
-            // Special effect: particles burst
-            for (let i = 0; i < 30; i++) {
-                const particle = new THREE.Mesh(new THREE.SphereGeometry(0.05, 4, 4), new THREE.MeshStandardMaterial({ color: colors[currentForm], emissive: true }));
-                particle.position.copy(camera.position);
-                particle.userData = { life: 0.5, velocity: new THREE.Vector3((Math.random() - 0.5) * 2, Math.random() * 2, (Math.random() - 0.5) * 2) };
-                scene.add(particle);
-                setTimeout(() => scene.remove(particle), 500);
+            auraMat.color.setHex(colors[formLevel]);
+            auraMat.emissiveIntensity = 0.5 + formLevel * 0.6;
+            document.getElementById('form-name').innerHTML = formNames[formLevel];
+            addNotification(`FORM: ${formNames[formLevel]}`, "#ffffff");
+            addScreenShake(0.25);
+            // particle burst
+            for (let i=0;i<40;i++) {
+                const p = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4,4), new THREE.MeshStandardMaterial({ color: colors[formLevel], emissive: true }));
+                p.position.copy(camera.position);
+                scene.add(p);
+                setTimeout(() => scene.remove(p), 400);
             }
         }
         
         // UI Helpers
         function updateUI() {
-            document.getElementById('hp-fill').style.width = `${(playerHealth / 100) * 100}%`;
-            document.getElementById('energy-fill').style.width = `${(playerEnergy / 100) * 100}%`;
-            document.getElementById('hp-value').innerHTML = Math.floor(playerHealth);
-            document.getElementById('level-num').innerHTML = playerLevel;
-            document.getElementById('xp-fill').style.width = `${(playerXP / xpNeeded) * 100}%`;
+            document.getElementById('hp-fill').style.width = `${(health / maxHealth) * 100}%`;
+            document.getElementById('energy-fill').style.width = `${(energy / maxEnergy) * 100}%`;
+            document.getElementById('hp-value').innerHTML = Math.floor(health);
+            document.getElementById('level-num').innerHTML = level;
+            document.getElementById('xp-fill').style.width = `${(xp / xpNeeded) * 100}%`;
         }
-        
+        function updateScoreUI() { document.getElementById('score-val').innerHTML = score; }
         function gainXP(amount) {
-            playerXP += amount;
-            while (playerXP >= xpNeeded) {
-                playerXP -= xpNeeded;
-                playerLevel++;
+            xp += amount;
+            while (xp >= xpNeeded) {
+                xp -= xpNeeded;
+                level++;
                 xpNeeded = Math.floor(xpNeeded * 1.35);
-                playerHealth = Math.min(100, playerHealth + 20);
-                playerEnergy = Math.min(100, playerEnergy + 15);
-                addNotification(`LEVEL UP! ${playerLevel}`, "#ffcc44");
+                maxHealth = Math.min(160, maxHealth + 18);
+                maxEnergy = Math.min(160, maxEnergy + 12);
+                health = maxHealth;
+                energy = maxEnergy;
+                addNotification(`LEVEL UP! ${level}`, "#ffcc44");
             }
             updateUI();
         }
-        
+        function updateComboUI() {
+            const el = document.getElementById('combo-text');
+            el.innerText = `x${combo} COMBO!`;
+            el.style.opacity = '1';
+            setTimeout(() => el.style.opacity = '0', 350);
+        }
+        function addScreenShake(intensity) {
+            camera.position.x += (Math.random() - 0.5) * intensity;
+            camera.position.z += (Math.random() - 0.5) * intensity;
+            setTimeout(() => { camera.position.x = 0; camera.position.z = 0; }, 100);
+        }
         function addNotification(msg, color) {
             const div = document.createElement('div');
             div.className = 'notif';
@@ -530,116 +640,70 @@
             div.style.color = color;
             div.innerText = msg;
             document.getElementById('notif-container').appendChild(div);
-            setTimeout(() => div.remove(), 2000);
+            setTimeout(() => div.remove(), 2100);
         }
         
-        function showComboText(val) {
-            const el = document.getElementById('combat-text');
-            el.innerText = `x${val} COMBO!`;
-            el.style.opacity = '1';
-            setTimeout(() => el.style.opacity = '0', 400);
-        }
-        
-        function addScreenShake(intensity) {
-            camera.position.x += (Math.random() - 0.5) * intensity;
-            camera.position.z += (Math.random() - 0.5) * intensity;
-            setTimeout(() => { camera.position.x = 0; camera.position.z = 0; }, 100);
-        }
-        
-        // Movement & Input
-        const keyState = { w: false, s: false, a: false, d: false, shift: false };
-        let moveSpeed = 5.5;
-        let mouseX = 0, mouseY = 0;
-        let pitch = 0, yaw = -Math.PI / 4;
-        let gameRunning = false;
-        
-        document.addEventListener('mousemove', (e) => {
-            if (!gameRunning) return;
-            yaw -= e.movementX * 0.003;
-            pitch -= e.movementY * 0.003;
-            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
-            camera.rotation.order = 'YXZ';
-            camera.rotation.y = yaw;
-            camera.rotation.x = pitch;
-        });
-        document.addEventListener('keydown', (e) => {
-            if (!gameRunning) return;
-            if (e.code === 'KeyW') keyState.w = true;
-            if (e.code === 'KeyS') keyState.s = true;
-            if (e.code === 'KeyA') keyState.a = true;
-            if (e.code === 'KeyD') keyState.d = true;
-            if (e.code === 'ShiftLeft') keyState.shift = true;
-            if (e.code === 'Digit1') useAbility(0);
-            if (e.code === 'Digit2') useAbility(1);
-            if (e.code === 'Digit3') useAbility(2);
-            if (e.code === 'Digit4') useAbility(3);
-            if (e.code === 'KeyR') useUltimate();
-            if (e.code === 'KeyQ') transformForm();
-            if (e.code === 'Space') attack();
-        });
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW') keyState.w = false;
-            if (e.code === 'KeyS') keyState.s = false;
-            if (e.code === 'KeyA') keyState.a = false;
-            if (e.code === 'KeyD') keyState.d = false;
-            if (e.code === 'ShiftLeft') keyState.shift = false;
-        });
-        document.addEventListener('click', () => {
-            if (gameRunning) attack();
-        });
-        
-        function updateMovement(delta) {
-            if (!gameRunning) return;
-            let speed = moveSpeed * (keyState.shift ? 2.2 : 1.0) * (currentForm === 2 ? 1.5 : 1.0);
-            const forward = camera.getWorldDirection(new THREE.Vector3());
-            const right = new THREE.Vector3().crossVectors(camera.up, forward).normalize();
-            let move = new THREE.Vector3(0, 0, 0);
-            if (keyState.w) move.z -= 1;
-            if (keyState.s) move.z += 1;
-            if (keyState.a) move.x -= 1;
-            if (keyState.d) move.x += 1;
-            move.normalize();
-            const vel = new THREE.Vector3();
-            vel.addScaledVector(forward, move.z * speed * delta);
-            vel.addScaledVector(right, move.x * speed * delta);
-            camera.position.add(vel);
-            // Boundary
-            camera.position.x = Math.max(-28, Math.min(28, camera.position.x));
-            camera.position.z = Math.max(-28, Math.min(28, camera.position.z));
-            
-            // Update particle system rotation for aesthetics
-            particles.rotation.y += 0.005;
-        }
-        
-        // Boss Spawn logic
-        let boss = null;
+        // Boss spawn logic
         function spawnBoss() {
             if (boss) return;
-            const bossMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.2, 1.5), new THREE.MeshStandardMaterial({ color: 0xdd1144, emissive: 0x441122, metalness: 0.8 }));
-            bossMesh.position.set(12, -0.3, 10);
+            const bossMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 1.6), new THREE.MeshStandardMaterial({ color: 0xdd1155, emissive: 0x551133, metalness: 0.9 }));
+            bossMesh.position.set(14, -0.4, 12);
             bossMesh.castShadow = true;
             scene.add(bossMesh);
-            boss = { mesh: bossMesh, hp: 300, maxHp: 300, alive: true };
+            boss = { mesh: bossMesh, hp: 450, maxHp: 450, alive: true };
             document.getElementById('boss-bar').style.display = 'block';
-            document.getElementById('boss-name').innerText = "★ VOID TITAN ★";
-            addNotification("BOSS APPROACHES!", "#ff3366");
+            document.getElementById('boss-name').innerHTML = "★ VOID TITAN ★";
+            addNotification("THE VOID TITAN EMERGES", "#ff3366");
         }
         
-        function updateBoss() {
+        function updateBossAndEnemies(delta) {
+            // Boss update
             if (boss && boss.alive) {
                 const percent = boss.hp / boss.maxHp;
                 document.getElementById('boss-hp').style.width = `${percent * 100}%`;
+                const distToBoss = camera.position.distanceTo(boss.mesh.position);
+                if (distToBoss < 2.0) {
+                    health -= 38 * delta;
+                    updateUI();
+                    addScreenShake(0.12);
+                    if (health <= 0) die();
+                }
                 if (boss.hp <= 0) {
                     scene.remove(boss.mesh);
                     boss = null;
                     document.getElementById('boss-bar').style.display = 'none';
-                    gainXP(300);
-                    addNotification("BOSS DEFEATED! EPIC LOOT!", "#ffaa44");
+                    gainXP(350);
+                    score += 1000;
+                    updateScoreUI();
+                    addNotification("BOSS SLAIN! EPIC POWER", "#ffaa44");
                 }
+            }
+            // Enemy updates
+            for (let i=0; i<enemies.length; i++) {
+                enemies[i].update(delta, camera.position);
+            }
+            enemies = enemies.filter(e => e.alive);
+            // loot collection
+            for (let i=0; i<loots.length; i++) {
+                if (camera.position.distanceTo(loots[i].position) < 1.2) {
+                    scene.remove(loots[i]);
+                    loots.splice(i,1);
+                    gainXP(25);
+                    break;
+                }
+            }
+            if (enemies.length === 0 && !boss && gameRunning && level >= 2) {
+                spawnBoss();
+                spawnEnemies(3);
             }
         }
         
-        // Game Loop
+        function die() {
+            gameRunning = false;
+            document.getElementById('death-screen').classList.remove('hidden');
+        }
+        
+        // Game loop
         let lastTime = 0;
         function animate(time) {
             requestAnimationFrame(animate);
@@ -650,75 +714,37 @@
                 return;
             }
             updateMovement(delta);
-            // Update enemies AI
-            for (let i = 0; i < enemies.length; i++) {
-                const e = enemies[i];
-                e.update(delta, camera.position);
-                // Enemy attack
-                if (e.alive && camera.position.distanceTo(e.mesh.position) < 1.2) {
-                    playerHealth -= e.damage * delta * 2;
-                    if (playerHealth <= 0) die();
-                    updateUI();
-                    addScreenShake(0.08);
-                }
-            }
-            // Clean dead enemies
-            enemies = enemies.filter(e => e.alive);
-            // Loot collection
-            for (let i = 0; i < lootItems.length; i++) {
-                const loot = lootItems[i];
-                if (camera.position.distanceTo(loot.mesh.position) < 1.2) {
-                    scene.remove(loot.mesh);
-                    lootItems.splice(i, 1);
-                    gainXP(20);
-                    addNotification("+20 XP", "#88ff88");
-                    break;
-                }
-            }
-            // Spawn boss condition
-            if (enemies.length === 0 && !boss && gameRunning) {
-                spawnBoss();
-                spawnEnemies();
-            }
-            if (boss && boss.alive && camera.position.distanceTo(boss.mesh.position) < 2) {
-                playerHealth -= 35 * delta;
-                updateUI();
-                if (playerHealth <= 0) die();
-            }
-            updateBoss();
-            // Regeneration
-            playerHealth = Math.min(100, playerHealth + 8 * delta);
-            playerEnergy = Math.min(100, playerEnergy + 12 * delta);
-            if (comboTime > 0) comboTime -= delta; else combo = 0;
+            updateBossAndEnemies(delta);
+            // regeneration
+            health = Math.min(maxHealth, health + 6 * delta);
+            energy = Math.min(maxEnergy, energy + 12 * delta);
+            if (comboTimer > 0) comboTimer -= delta; else combo = 0;
             updateUI();
-            // Aura intensity based on form
-            auraMat.emissiveIntensity = 0.4 + currentForm * 0.5 + Math.sin(time * 0.01) * 0.1;
-            
+            // particle rotation
+            particleSys.rotation.y += 0.002;
             effectComposer.render();
         }
         
-        function die() {
-            gameRunning = false;
-            document.getElementById('death-screen').classList.remove('hidden');
-        }
-        
+        // Game start/restart
         function startGame() {
             document.getElementById('menu-screen').classList.add('hidden');
             document.getElementById('death-screen').classList.add('hidden');
             gameRunning = true;
-            playerHealth = 100; playerEnergy = 100; playerLevel = 1; playerXP = 0; currentForm = 0;
+            health = 100; maxHealth = 100; energy = 100; maxEnergy = 100; level = 1; xp = 0; score = 0; formLevel = 0;
             enemies.forEach(e => scene.remove(e.mesh));
-            enemies = [];
-            lootItems.forEach(l => scene.remove(l.mesh));
-            lootItems = [];
+            loots.forEach(l => scene.remove(l));
+            enemies = []; loots = [];
             if (boss) scene.remove(boss.mesh);
             boss = null;
-            camera.position.set(0, 1.6, 0);
+            camera.position.set(0, 1.65, 0);
+            velocityX = 0; velocityZ = 0;
             yaw = -Math.PI/4; pitch = 0;
             camera.rotation.y = yaw; camera.rotation.x = pitch;
-            spawnEnemies();
-            updateUI();
-            addNotification("NEXUS POWER ACTIVATED", "#66ccff");
+            spawnEnemies(5);
+            updateUI(); updateScoreUI();
+            document.getElementById('form-name').innerHTML = "BASE";
+            auraMat.color.setHex(0x88aaff);
+            addNotification("NEXUS ENERGY FLOWS WITHIN", "#66ccff");
         }
         
         window.startGame = startGame;
@@ -728,19 +754,18 @@
             document.getElementById('menu-screen').classList.remove('hidden');
             document.getElementById('death-screen').classList.add('hidden');
         };
-        window.showControls = () => {
+        window.toggleControls = () => {
             const ctrl = document.getElementById('controls-info');
             ctrl.style.display = ctrl.style.display === 'none' ? 'block' : 'none';
         };
         
-        // Initialize abilities UI
-        const abilityNames = ["NEXUS SLASH", "ENERGY WAVE", "COSMIC SHIELD", "VOID STRIKE"];
-        const bar = document.getElementById('ability-bar');
-        abilityNames.forEach((name, i) => {
+        // Ability UI
+        const abilitiesDiv = document.getElementById('ability-bar');
+        ['NEXUS SLASH', 'ENERGY WAVE', 'COSMIC SHIELD', 'VOID BREAK'].forEach((name, i) => {
             const div = document.createElement('div');
-            div.className = 'ability ready';
-            div.innerHTML = `<span style="font-size:16px">${i+1}</span><span style="font-size:7px">${name}</span>`;
-            bar.appendChild(div);
+            div.className = 'ability-slot ready';
+            div.innerHTML = `<span style="font-size:15px; font-weight:bold">${i+1}</span><span style="font-size:7px">${name}</span>`;
+            abilitiesDiv.appendChild(div);
         });
         
         animate(0);
@@ -751,7 +776,6 @@
             effectComposer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        // Initial menu state
         gameRunning = false;
     </script>
 </body>
