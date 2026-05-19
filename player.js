@@ -1,43 +1,50 @@
-// player.js
+// player.js - Realistic Physics
 const player = {
     x: 150,
     y: 300,
     size: 40,
-    velocity: 0,
+    velocityY: 0,
     grounded: true,
     rotation: 0,
     isHoldingJump: false
 };
 
-const GRAVITY = 1.4;
-const JUMP_FORCE = -23;
+const GRAVITY = 1.28;
+const JUMP_FORCE = -24.5;
+const HOLD_REDUCTION = 0.52;
 
 function jump() {
     if (player.grounded) {
-        player.velocity = JUMP_FORCE;
+        player.velocityY = JUMP_FORCE;
         player.grounded = false;
         player.isHoldingJump = true;
     }
 }
 
 function updatePlayer() {
-    // Variable jump height (hold = higher jump)
-    if (!player.isHoldingJump && player.velocity < 0) {
-        player.velocity *= 0.65; // Cut jump short if not holding
+    let currentGravity = GRAVITY;
+
+    // Variable jump height - holding jump makes you go higher
+    if (player.isHoldingJump && player.velocityY < 0) {
+        currentGravity *= HOLD_REDUCTION;
     }
 
-    player.velocity += GRAVITY;
-    player.y += player.velocity;
+    player.velocityY += currentGravity;
+    player.y += player.velocityY;
 
+    // Ground landing
     if (player.y >= 300) {
         player.y = 300;
-        player.velocity = 0;
+        player.velocityY = 0;
         player.grounded = true;
-        player.rotation = Math.round(player.rotation / 90) * 90;
+        player.rotation = Math.round(player.rotation / 90) * 90; // Snap to grid
     }
 
+    // Fast cube rotation in air
     if (!player.grounded) {
-        player.rotation += 18;
+        player.rotation += 17.5;
+    } else {
+        player.rotation = 0;
     }
 }
 
@@ -51,9 +58,9 @@ function drawPlayer() {
     ctx.fillStyle = '#00ffff';
     ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
 
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 15;
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-player.size/2 + 8, -player.size/2 + 8, player.size-16, player.size-16);
+    ctx.fillRect(-player.size/2 + 8, -player.size/2 + 8, player.size - 16, player.size - 16);
 
     ctx.restore();
 }
