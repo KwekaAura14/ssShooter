@@ -350,11 +350,20 @@
         </div>
     </div>
 
+    <script src="game.js"></script>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
+
+        // Initialize managers
+        const particleSystem = new ParticleSystem();
+        const soundManager = new SoundManager();
+        const gameStateManager = new GameStateManager();
+
+        // Add groundLevel to players
+        const groundLevel = canvas.height - 120;
 
         const game = {
             p1: {
@@ -374,7 +383,8 @@
                 stunned: 0,
                 direction: 1,
                 animationFrame: 0,
-                state: 'idle'
+                state: 'idle',
+                groundLevel: groundLevel
             },
             p2: {
                 hp: 100,
@@ -392,7 +402,8 @@
                 direction: -1,
                 animationFrame: 0,
                 state: 'idle',
-                actionCooldown: 0
+                actionCooldown: 0,
+                groundLevel: groundLevel
             },
             msg: 'ROUND 1 - FIGHT!',
             combo: [],
@@ -401,129 +412,8 @@
             gameState: 'playing',
             keysPressed: {},
             gravity: 0.6,
-            groundLevel: canvas.height - 120
+            groundLevel: groundLevel
         };
-
-        function drawCharacter(player, isTransformed = false) {
-            const x = player.x;
-            const y = player.y + game.groundLevel;
-            const scale = player.direction;
-            const color1 = player.direction > 0 ? '#3b82f6' : '#dc2626';
-            const color2 = player.direction > 0 ? '#1e40af' : '#7f1d1d';
-
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.scale(scale, 1);
-
-            // Head
-            if (isTransformed) {
-                ctx.fillStyle = '#fcd34d';
-                ctx.shadowColor = 'rgba(252, 211, 77, 0.8)';
-                ctx.shadowBlur = 15;
-            } else {
-                ctx.fillStyle = player.direction > 0 ? '#fef08a' : '#fed7aa';
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-                ctx.shadowBlur = 5;
-            }
-            ctx.beginPath();
-            ctx.arc(0, -80, 20, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Eyes
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(-8, -85, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(8, -85, 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Body
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = color1;
-            ctx.fillRect(-15, -60, 30, 45);
-
-            // Chest details
-            ctx.fillStyle = color2;
-            ctx.fillRect(-10, -50, 20, 15);
-
-            // Arms position based on animation
-            let leftArmX = -20;
-            let leftArmY = -45;
-            let rightArmX = 20;
-            let rightArmY = -45;
-            let armRotation = 0;
-
-            if (player.state === 'attacking') {
-                armRotation = Math.sin(player.attackFrame / 5) * 0.5;
-            }
-
-            // Left Arm
-            ctx.fillStyle = player.direction > 0 ? '#60a5fa' : '#fca5a5';
-            ctx.save();
-            ctx.translate(leftArmX, leftArmY);
-            ctx.rotate(armRotation);
-            ctx.fillRect(-8, 0, 16, 40);
-            ctx.restore();
-
-            // Right Arm
-            ctx.fillStyle = player.direction > 0 ? '#60a5fa' : '#fca5a5';
-            ctx.save();
-            ctx.translate(rightArmX, rightArmY);
-            ctx.rotate(-armRotation);
-            ctx.fillRect(-8, 0, 16, 40);
-            ctx.restore();
-
-            // Legs position based on animation
-            let leftLegAngle = 0;
-            let rightLegAngle = 0;
-
-            if (player.state === 'walking') {
-                const walkCycle = Math.sin(player.animationFrame / 5) * 0.3;
-                leftLegAngle = walkCycle;
-                rightLegAngle = -walkCycle;
-            } else if (player.state === 'attacking') {
-                rightLegAngle = 0.3;
-            }
-
-            // Left Leg
-            ctx.fillStyle = color2;
-            ctx.save();
-            ctx.translate(-10, -15);
-            ctx.rotate(leftLegAngle);
-            ctx.fillRect(-8, 0, 16, 35);
-            ctx.restore();
-
-            // Right Leg
-            ctx.save();
-            ctx.translate(10, -15);
-            ctx.rotate(rightLegAngle);
-            ctx.fillRect(-8, 0, 16, 35);
-            ctx.restore();
-
-            // Block shield
-            if (player.block) {
-                ctx.strokeStyle = '#06b6d4';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(20, -40, 25, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            // Transformation aura
-            if (isTransformed) {
-                ctx.strokeStyle = 'rgba(252, 211, 77, 0.6)';
-                ctx.lineWidth = 2;
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.arc(0, -50, 45 + i * 10, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-            }
-
-            ctx.restore();
-        }
 
         function drawGround() {
             ctx.fillStyle = '#1a1a1a';
@@ -598,6 +488,15 @@
                 game.p2.state = 'hurt';
                 game.p1.power = Math.min(100, game.p1.power + 15);
 
+                // Add particles
+                particleSystem.emit(game.p2.x, game.p2.y + game.groundLevel - 80, 15, {
+                    vxRange: [-6, 6],
+                    vyRange: [-8, -2],
+                    color: bonus ? '#FF6B6B' : '#FFD700',
+                    sizeRange: [2, 6],
+                    lifetime: 800
+                });
+
                 addDamagePopup(game.p2.x, game.groundLevel - 80, totalDmg.toString(), bonus ? '#ff6b6b' : '#fcd34d');
 
                 if (bonus) {
@@ -627,6 +526,15 @@
             game.p2.stunned = 5;
             game.p2.state = 'hurt';
 
+            // Large explosion particles
+            particleSystem.emit(game.p2.x, game.p2.y + game.groundLevel - 100, 30, {
+                vxRange: [-8, 8],
+                vyRange: [-10, -3],
+                color: '#FF9F1C',
+                sizeRange: [3, 10],
+                lifetime: 1200
+            });
+
             addDamagePopup(game.p2.x, game.groundLevel - 100, 'FIREBALL!', '#ff9f1c');
             game.msg = '🔥 FIREBALL! 🔥';
             updateUI();
@@ -638,6 +546,15 @@
             game.p1.transformed = true;
             game.p1.power = 0;
             game.msg = '⚡ ULTIMATE FORM! ⚡';
+
+            // Transformation particles
+            particleSystem.emit(game.p1.x, game.p1.y + game.groundLevel - 120, 40, {
+                vxRange: [-10, 10],
+                vyRange: [-12, -5],
+                color: '#FCD34D',
+                sizeRange: [2, 8],
+                lifetime: 1500
+            });
 
             addDamagePopup(game.p1.x, game.groundLevel - 120, 'TRANSFORMATION', '#fcd34d');
 
@@ -667,7 +584,8 @@
                 stunned: 0,
                 direction: 1,
                 animationFrame: 0,
-                state: 'idle'
+                state: 'idle',
+                groundLevel: groundLevel
             };
             game.p2 = {
                 hp: 100,
@@ -685,13 +603,15 @@
                 direction: -1,
                 animationFrame: 0,
                 state: 'idle',
-                actionCooldown: 0
+                actionCooldown: 0,
+                groundLevel: groundLevel
             };
             game.combo = [];
             game.round++;
             game.gameState = 'playing';
             game.msg = `ROUND ${game.round} - FIGHT!`;
             document.getElementById('gameoverContainer').innerHTML = '';
+            particleSystem.particles = [];
             updateUI();
         }
 
@@ -796,6 +716,15 @@
                         game.p2.attackFrame = 0;
                         game.p2.actionCooldown = 8;
 
+                        // Enemy attack particles
+                        particleSystem.emit(game.p1.x, game.p1.y + game.groundLevel - 80, 10, {
+                            vxRange: [-5, 5],
+                            vyRange: [-6, -1],
+                            color: '#FCA5A5',
+                            sizeRange: [2, 5],
+                            lifetime: 600
+                        });
+
                         addDamagePopup(game.p1.x, game.groundLevel - 80, actualDamage.toString(), '#fca5a5');
                     } else if (game.p2.hp < 40 && random > 0.65) {
                         game.p1.hp = Math.max(0, game.p1.hp - 20);
@@ -832,6 +761,9 @@
             if (game.p2.state === 'attacking') game.p2.attackFrame++;
             if (game.p2.state === 'walking') game.p2.animationFrame++;
 
+            // Update particles
+            particleSystem.update(16);
+
             // Check game over
             if (game.p1.hp <= 0 && game.gameState === 'playing') {
                 game.gameState = 'p2-win';
@@ -865,9 +797,12 @@
             // Draw ground
             drawGround();
 
-            // Draw characters
-            drawCharacter(game.p1, game.p1.transformed);
-            drawCharacter(game.p2);
+            // Draw characters with enhanced renderer
+            CharacterRenderer.drawCharacter(ctx, game.p1, game.p1.transformed);
+            CharacterRenderer.drawCharacter(ctx, game.p2);
+
+            // Draw particles
+            particleSystem.draw(ctx);
 
             updateGame();
             updateUI();
